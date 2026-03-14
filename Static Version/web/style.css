@@ -6,7 +6,7 @@
   user-select: none;
 }
 .bg-img{
-  background: url('images/bg.jpg');
+  background: url('images/bg.png');
   height: 100vh;
   background-size: cover;
   background-position: center;
@@ -18,7 +18,7 @@
   left: 0;
   height: 100%;
   width: 100%;
-  background: rgba(0,0,0,0.7);
+  
 }
 .content{
   position: absolute;
@@ -44,7 +44,7 @@
   height: 45px;
   width: 100%;
   display: flex;
-  background: rgba(255,255,255,0.94);
+  
 }
 .field span{
   color: #222;
@@ -60,6 +60,8 @@
   color: #222;
   font-size: 16px;
   font-family: 'Poppins',sans-serif;
+  background-color: transparent;
+
 }
 .space{
   margin-top: 16px;
@@ -155,4 +157,11 @@ i span{
 }
 .signup a:hover{
   text-decoration: underline;
+}
+
+.transparent-input{
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: black;
 }

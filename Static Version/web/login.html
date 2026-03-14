@@ -6,25 +6,30 @@
     <link rel="stylesheet" href="style.css">
    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
   </head>
+
+  <header  style="padding-top: 1%; padding-bottom: 0.5%; min-height: 50px; background-color: #fff3d4 ; color:#ff751f; text-align: center; font-size:80px; font-family: sans-serif; vertical-align: bottom;"><b>CookIt.</b></header>
   <body>
     <div class="bg-img">
       <div class="content">
-        <header>Login Form</header>
+        
         <form action="#">
           <div class="field">
             <span class="fa fa-user"></span>
-            <input type="text" required placeholder="Email or Phone">
+            <input type="text" class="transparent-input" required placeholder="Email" >
+            
           </div>
+          <hr style="height:2px; margin-top: 1px; color: black;background-color: black; border: none;">
           <div class="field space">
             <span class="fa fa-lock"></span>
             <input type="password" class="pass-key" required placeholder="Password">
             <span class="show">SHOW</span>
           </div>
+          <hr style="height:2px; margin-top: 1px; color: black;background-color: black; border: none;">
           <div class="pass">
-            <a href="#">Forgot Password?</a>
+            <a href="index.html">Go to mainpage</a>
           </div>
           <div class="field">
-            <input type="submit" value="LOGIN">
+            <input type="submit" value="LOGIN" href = "index.html">
           </div>
         </form>
         <div class="login">Or login with</div>
