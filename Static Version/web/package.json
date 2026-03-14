@@ -1,0 +1,27 @@
+{
+  "name": "cookit-app",
+  "version": "1.0.0",
+  "description": "Repository for the Android Cookit app.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Edsalazar65/Cookit-App.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Edsalazar65/Cookit-App/issues"
+  },
+  "homepage": "https://github.com/Edsalazar65/Cookit-App#readme",
+  "devDependencies": {
+    "vite": "^8.0.0"
+  }
+}
