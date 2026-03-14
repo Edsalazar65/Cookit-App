@@ -118,7 +118,7 @@ input, select, textarea {
 	h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 		color: inherit;
 		text-decoration: none;
-		border-bottom-color: transparent;
+		
 	}
 
 	h1 strong, h2 strong, h3 strong, h4 strong, h5 strong, h6 strong {
@@ -1927,7 +1927,7 @@ input, select, textarea {
 				background: none;
 				width: 2.5em;
 				height: 2.5em;
-				line-height: 2.5em;
+				
 				text-align: center;
 				border-radius: 100%;
 				border: 0;
@@ -2053,6 +2053,8 @@ input, select, textarea {
 	input[type="reset"],
 	button,
 	.button {
+		margin-left: 50px;
+		margin-right: 50px;
 		position: relative;
 		display: inline-block;
 		background: #df7366;
@@ -2061,14 +2063,22 @@ input, select, textarea {
 		border-radius: 0.5em;
 		text-decoration: none;
 		padding: 0.65em 3em 0.65em 3em;
-		border: 0;
+		border: 100px;
 		cursor: pointer;
-		outline: 0;
+		outline: 5px;
 		font-weight: 300;
 		-moz-transition: background-color 0.35s ease-in-out, color 0.35s ease-in-out, border-bottom-color 0.35s ease-in-out;
 		-webkit-transition: background-color 0.35s ease-in-out, color 0.35s ease-in-out, border-bottom-color 0.35s ease-in-out;
 		-ms-transition: background-color 0.35s ease-in-out, color 0.35s ease-in-out, border-bottom-color 0.35s ease-in-out;
 		transition: background-color 0.35s ease-in-out, color 0.35s ease-in-out, border-bottom-color 0.35s ease-in-out;
+	}.button1{
+		background-color: orange;
+	}
+	.button2{
+		background-color: red;
+	}
+	.button3{
+		background-color: green;
 	}
 
 		input[type="button"]:hover,
@@ -2176,14 +2186,15 @@ input, select, textarea {
 
 	#header {
 		position: relative;
-		background-image: url("../../images/header.jpg");
+		background-image: url("images/header.jpg");
 		background-size: cover;
 		background-position: center center;
 		background-attachment: fixed;
 		color: #fff;
 		text-align: center;
-		padding: 7.5em 0 2em 0;
+		padding: 2em 0 2em 0;
 		cursor: default;
+		background-color: #ebb173;
 	}
 
 		#header:before {
@@ -2199,6 +2210,7 @@ input, select, textarea {
 			margin: 0;
 			display: inline-block;
 			vertical-align: middle;
+			
 		}
 
 		#header header {
@@ -2246,38 +2258,14 @@ input, select, textarea {
 			margin: 1em 0 0 0;
 		}
 
-	body.homepage #header {
-		height: 100vh;
-		min-height: 40em;
-	}
+	
 
 		body.homepage #header h1 {
 			font-size: 4em;
 		}
 
-		body.homepage #header:after {
-			content: '';
-			background: #1C0920;
-			display: block;
-			position: absolute;
-			left: 0;
-			top: 0;
-			width: 100%;
-			height: 100%;
-			opacity: 0;
-			-moz-transition: opacity 2.5s ease-in-out;
-			-webkit-transition: opacity 2.5s ease-in-out;
-			-ms-transition: opacity 2.5s ease-in-out;
-			transition: opacity 2.5s ease-in-out;
-			-moz-transition-delay: 0.5s;
-			-webkit-transition-delay: 0.5s;
-			-ms-transition-delay: 0.5s;
-			transition-delay: 0.5s;
-		}
+		
 
-	body.homepage.is-preload #header:after {
-		opacity: 1;
-	}
 
 /* Nav */
 
@@ -2408,7 +2396,7 @@ input, select, textarea {
 /* Banner */
 
 	#banner {
-		background: #fff;
+		background: #fff9eb;
 		text-align: center;
 		padding: 4.5em 0 4.5em 0;
 		margin-bottom: 0;
