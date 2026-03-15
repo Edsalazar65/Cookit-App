@@ -1299,105 +1299,10 @@ input, select, textarea {
 					align-items: flex-end;
 				}
 
-				.row > .imp-mobile {
-					order: -1;
-				}
-
-				.row > .col-1-mobile {
-					width: 8.33333%;
-				}
-
-				.row > .off-1-mobile {
-					margin-left: 8.33333%;
-				}
-
-				.row > .col-2-mobile {
-					width: 16.66667%;
-				}
-
-				.row > .off-2-mobile {
-					margin-left: 16.66667%;
-				}
-
-				.row > .col-3-mobile {
-					width: 25%;
-				}
-
-				.row > .off-3-mobile {
-					margin-left: 25%;
-				}
-
-				.row > .col-4-mobile {
-					width: 33.33333%;
-				}
-
-				.row > .off-4-mobile {
-					margin-left: 33.33333%;
-				}
-
-				.row > .col-5-mobile {
-					width: 41.66667%;
-				}
-
-				.row > .off-5-mobile {
-					margin-left: 41.66667%;
-				}
-
-				.row > .col-6-mobile {
-					width: 50%;
-				}
-
-				.row > .off-6-mobile {
-					margin-left: 50%;
-				}
-
-				.row > .col-7-mobile {
-					width: 58.33333%;
-				}
-
-				.row > .off-7-mobile {
-					margin-left: 58.33333%;
-				}
-
-				.row > .col-8-mobile {
-					width: 66.66667%;
-				}
-
-				.row > .off-8-mobile {
-					margin-left: 66.66667%;
-				}
-
-				.row > .col-9-mobile {
-					width: 75%;
-				}
-
-				.row > .off-9-mobile {
-					margin-left: 75%;
-				}
-
-				.row > .col-10-mobile {
-					width: 83.33333%;
-				}
-
-				.row > .off-10-mobile {
-					margin-left: 83.33333%;
-				}
-
-				.row > .col-11-mobile {
-					width: 91.66667%;
-				}
-
-				.row > .off-11-mobile {
-					margin-left: 91.66667%;
-				}
-
 				.row > .col-12-mobile {
 					width: 100%;
 				}
 
-				.row > .off-12-mobile {
-					margin-left: 100%;
-				}
 
 				.row.gtr-0 {
 					margin-top: 0px;
@@ -1713,7 +1618,7 @@ input, select, textarea {
 	form input[type="password"],
 	form select,
 	form textarea {
-		-webkit-appearance: none;
+		
 		display: block;
 		border: 0;
 		background: #fafafa;
@@ -2156,12 +2061,7 @@ input, select, textarea {
 
 /* Banner */
 
-	#banner {
-		background: #fff9eb;
-		text-align: center;
-		padding: 4.5em 0 4.5em 0;
-		margin-bottom: 0;
-	}
+
 
 		#banner header > p {
 			margin-bottom: 0;
@@ -2169,10 +2069,6 @@ input, select, textarea {
 
 /* Content */
 
-	#content > hr {
-		top: 3em;
-		margin-bottom: 6em;
-	}
 
 	#content > section {
 		margin-bottom: 0;
@@ -2180,10 +2076,6 @@ input, select, textarea {
 
 /* Sidebar */
 
-	#sidebar > hr {
-		top: 3em;
-		margin-bottom: 6em;
-	}
 
 		#sidebar > hr.first {
 			display: none;
@@ -2236,12 +2128,6 @@ input, select, textarea {
 				margin: 0 0 3em 0;
 			}
 
-		#footer .copyright {
-			text-align: center;
-			color: rgba(128, 128, 128, 0.75);
-			font-size: 0.8em;
-			cursor: default;
-		}
 
 			#footer .copyright a {
 				color: rgba(128, 128, 128, 0.75);
@@ -2284,7 +2170,6 @@ input, select, textarea {
 				-o-transition: background-color 0.35s ease-in-out;
 				-ms-transition: background-color 0.35s ease-in-out;
 				transition: background-color 0.35s ease-in-out;
-				-webkit-backface-visibility: hidden;
 			}
 
 			.carousel .forward:after, .carousel .backward:after {
@@ -2454,15 +2339,6 @@ input, select, textarea {
 				line-height: 1.65em;
 			}
 
-			.tweet {
-				text-align: center;
-			}
-
-			.timestamp {
-				display: block;
-				text-align: center;
-			}
-
 		/* Footer */
 
 			#footer {
@@ -2483,10 +2359,6 @@ input, select, textarea {
 	}
 
 /* Mobile */
-
-	#navPanel, #titleBar {
-		display: none;
-	}
 
 	@media screen and (max-width: 736px) {
 
@@ -2736,31 +2608,6 @@ input, select, textarea {
 						color: #fff;
 						font-weight: 600;
 					}
-
-				#navPanel .indent-1 {
-					display: inline-block;
-					width: 1em;
-				}
-
-				#navPanel .indent-2 {
-					display: inline-block;
-					width: 2em;
-				}
-
-				#navPanel .indent-3 {
-					display: inline-block;
-					width: 3em;
-				}
-
-				#navPanel .indent-4 {
-					display: inline-block;
-					width: 4em;
-				}
-
-				#navPanel .indent-5 {
-					display: inline-block;
-					width: 5em;
-				}
 
 				#navPanel .depth-0 {
 					color: #fff;
