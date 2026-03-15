@@ -2253,7 +2253,7 @@ input, select, textarea {
     border: none;
     padding: 10px 25px;
     color: white;
-	margin-top: 30px;
+	margin-top: 50px;
 }
 
 .recipe-card {
@@ -2361,7 +2361,7 @@ body {
     font-weight: bold;
     border-radius: 50px;
     margin-bottom: 40px;
-	margin-top: 30px;
+	margin-top: 50px;
 }
 
 /* Etiqueta con Corazón */
