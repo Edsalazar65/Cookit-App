@@ -3119,3 +3119,112 @@ input, select, textarea {
 					}
 
 	}
+
+/* Estilos inspirados en la imagen */
+.search-container {
+    margin-bottom: 30px;
+}
+
+#recipeSearch {
+    width: 100%;
+    border-radius: 50px;
+    background: #b1b1b1;
+    border: none;
+    padding: 10px 25px;
+    color: white;
+	margin-top: 30px;
+}
+
+.recipe-card {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 40px;
+    align-items: flex-start;
+}
+
+.recipe-info img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 20px;
+    display: block;
+}
+
+.recipe-title {
+    display: block;
+    background: #f9d291;
+    padding: 5px 15px;
+    border-radius: 15px;
+    margin-top: 10px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.ingredients-box {
+    background: #f9d291;
+    padding: 20px;
+    border-radius: 30px;
+    flex-grow: 1;
+    min-height: 200px;
+}
+
+.chat-sidebar {
+    background: #e3d5a1;
+    border-radius: 30px;
+    height: 500px;
+    position: relative;
+    padding: 20px;
+}
+
+.chat-bubble {
+    background: white;
+    padding: 10px 15px;
+    border-radius: 15px 15px 15px 0;
+    margin-top: 300px;
+    font-size: 0.9em;
+}
+
+.chat-input-area {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background: #b1b1b1;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    padding: 5px 15px;
+}
+
+.floating-nav {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10000;
+    background-color: #f9d291; /* Color naranja de la imagen */
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Ajuste para que el contenido no empiece debajo de la barra */
+body {
+    padding-top: 80px; 
+}
+
+/* Estilo para los botones redondeados de la imagen */
+.floating-nav button, .button1 {
+    border-radius: 20px !important;
+    padding: 5px 25px !important;
+    text-transform: uppercase;
+    font-weight: bold;
+    border: 2px solid #333 !important;
+    cursor: pointer;
+}
+
+.button1 { background-color: #a36b4f; color: white; } /* HOME */
+.button2 { background-color: #ff8c42; color: white; } /* FAVORITES */
+.button3 { background-color: #5d8a5d; color: white; } /* ACCOUNT/PROFILE */
