@@ -216,10 +216,6 @@ input, select, textarea {
 			right: -1px;
 		}
 
-	.timestamp {
-		color: rgba(128, 128, 128, 0.75);
-		font-size: 0.8em;
-	}
 
 /* Container */
 
@@ -318,9 +314,6 @@ input, select, textarea {
 			width: 8.33333%;
 		}
 
-		.row > .off-1 {
-			margin-left: 8.33333%;
-		}
 
 		.row > .col-2 {
 			width: 16.66667%;
