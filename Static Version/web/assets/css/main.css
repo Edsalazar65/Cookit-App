@@ -3228,3 +3228,197 @@ body {
 .button1 { background-color: #a36b4f; color: white; } /* HOME */
 .button2 { background-color: #ff8c42; color: white; } /* FAVORITES */
 .button3 { background-color: #5d8a5d; color: white; } /* ACCOUNT/PROFILE */
+
+
+/* Banner de Favoritos */
+.favorites-banner {
+    background-color: #f4cccc; /* Color rosado de la imagen */
+    color: #8e7f7f;
+    text-align: center;
+    padding: 15px;
+    font-size: 1.5em;
+    font-weight: bold;
+    border-radius: 50px;
+    margin-bottom: 40px;
+	margin-top: 30px;
+}
+
+/* Etiqueta con Corazón */
+.recipe-tag {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9d291;
+    padding: 5px 15px;
+    border-radius: 15px;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #777;
+}
+
+.heart-icon {
+    color: #e06666;
+    font-size: 1.2em;
+}
+
+/* Ajuste de cards para que se vean amplias como en la imagen */
+.recipe-card {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 50px;
+    justify-content: center;
+}
+
+.recipe-info img {
+    width: 250px;
+    height: 250px;
+    border-radius: 25px;
+    object-fit: cover;
+}
+
+.ingredients-box {
+    background: #f9d291;
+    padding: 30px;
+    border-radius: 35px;
+    min-width: 450px;
+}
+
+/* Contenedor Principal del Perfil */
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.profile-header {
+    margin-bottom: 40px;
+}
+
+/* Avatar Circular con Borde */
+.avatar-wrapper {
+    position: relative;
+    width: 180px;  /* Ancho fijo */
+    height: 180px; /* Alto fijo */
+    margin: 0 auto 20px;
+    display: flex; /* Centra el contenido si la imagen falla */
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0; /* Fondo gris claro si no hay imagen */
+    border-radius: 50%;
+	margin-top: 70px;
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-sizing: border-box; 
+    border: 8px solid #f9d291; 
+    object-fit: cover; /* Mantiene la proporción de la foto */
+    display: block;
+	
+}
+
+.edit-badge {
+    position: absolute;
+    bottom: 5px;  /* Ajustado para que no flote lejos */
+    right: 5px;   /* Ajustado para quedar en la esquina del círculo */
+    background: #a36b4f;
+    color: white;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2em;
+    z-index: 2; /* Asegura que esté por encima */
+    border: 3px solid white; /* Añadido para que resalte */
+}
+
+.edit-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: #a36b4f;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+/* Cards de Perfil */
+.profile-card {
+    background: #f9d291;
+    padding: 30px;
+    border-radius: 35px;
+    min-height: 200px;
+    margin-bottom: 20px;
+}
+
+.profile-card h3 {
+    color: #5d4037;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Grilla de Estadísticas */
+.stats-grid {
+    display: flex;
+    justify-content: space-around;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #a36b4f;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    text-transform: uppercase;
+    color: #555;
+}
+
+/* Lista de Ajustes */
+.settings-list {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+}
+
+.settings-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.settings-list li span {
+    font-weight: bold;
+    color: #5d8a5d; /* Color verde del botón Account */
+}
+
+/* Botón Log Out */
+.profile-actions {
+    margin-top: 30px;
+}
+
+.logout-btn {
+    background-color: #e06666 !important;
+    border-radius: 20px !important;
+    color: white !important;
+    width: 200px;
+}
