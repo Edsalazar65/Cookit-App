@@ -1505,15 +1505,6 @@ input, select, textarea {
 				background: #3B353C;
 			}
 
-/* Post */
-
-	.post.stub {
-		text-align: center;
-	}
-
-		.post.stub header {
-			margin: 0;
-		}
 
 /* Icons */
 
@@ -1664,7 +1655,6 @@ input, select, textarea {
 		}
 
 		
-
 
 /* Nav */
 
@@ -1824,46 +1814,21 @@ input, select, textarea {
 				margin: 0 0 3em 0;
 			}
 
-/* Wide */
-
 	@media screen and (max-width: 1680px) {
-
-		/* Basic */
 
 			body, input, textarea, select {
 				font-size: 14pt;
 				line-height: 1.75em;
 			}
 
-		/* Carousel */
-
-			.carousel {
-				padding: 1.5em 0 1.5em 0;
-			}
-
-				.carousel .reel {
-					padding: 0 1.5em 0 1.5em;
-				}
-
-				.carousel article {
-					width: 18em;
-					margin: 0 1.25em 0 0;
-				}
-
 	}
 
-/* Normal */
-
 	@media screen and (max-width: 1280px) {
-
-		/* Basic */
 
 			body, input, textarea, select {
 				font-size: 12pt;
 				line-height: 1.5em;
 			}
-
-		/* Wrapper */
 
 			.wrapper {
 				padding-left: 2em;
@@ -1890,43 +1855,22 @@ input, select, textarea {
 
 	}
 
-/* Narrow */
-
-/* Narrower */
 
 	@media screen and (max-width: 840px) {
-
-		/* Basic */
 
 			body, input, textarea, select {
 				font-size: 13pt;
 				line-height: 1.65em;
 			}
 
-		/* Footer */
-
 			#footer {
 				padding: 4em 2em 4em 2em;
 			}
 
-		/* Carousel */
-
-			.carousel {
-				padding: 1.25em 0 1.25em 0;
-			}
-
-				.carousel article {
-					width: 18em;
-					margin: 0 1em 0 0;
-				}
-
 	}
 
-/* Mobile */
 
 	@media screen and (max-width: 736px) {
-
-		/* Basic */
 
 			html, body {
 				overflow-x: hidden;
@@ -1950,7 +1894,6 @@ input, select, textarea {
 				margin-bottom: 6em;
 			}
 
-		/* Section/Article */
 
 			section, article {
 				margin-bottom: 2em;
@@ -1968,7 +1911,7 @@ input, select, textarea {
 				font-size: 1.25em;
 			}
 
-		/* Actions */
+		/* Acciones */
 
 			form ul.actions {
 				margin-top: 0;
@@ -1984,7 +1927,6 @@ input, select, textarea {
 				}
 
 		/* Menu */
-
 			ul.menu {
 				height: auto;
 				text-align: center;
@@ -2000,9 +1942,6 @@ input, select, textarea {
 					ul.menu li:first-child {
 						padding-top: 0;
 					}
-
-		/* Icons */
-
 			ul.icons {
 				font-size: 1em;
 				padding: 0.35em 0.5em 0.35em 0.5em;
@@ -2013,7 +1952,6 @@ input, select, textarea {
 				}
 
 		/* Button */
-
 			input[type="button"],
 			input[type="submit"],
 			input[type="reset"],
@@ -2026,7 +1964,6 @@ input, select, textarea {
 			}
 
 		/* Nav */
-
 			#page-wrapper {
 				-moz-backface-visibility: hidden;
 				-webkit-backface-visibility: hidden;
@@ -2126,7 +2063,6 @@ input, select, textarea {
 				box-shadow: inset 0px -2px 5px 0px rgba(0, 0, 0, 0.25);
 				font-size: 1em;
 			}
-
 				#navPanel:before {
 					content: '';
 					display: block;
@@ -2138,7 +2074,6 @@ input, select, textarea {
 					background: url("images/overlay.png");
 					background-size: 128px 128px;
 				}
-
 				#navPanel .link {
 					position: relative;
 					z-index: 1;
@@ -2149,11 +2084,9 @@ input, select, textarea {
 					border: 0;
 					border-top: dotted 1px rgba(255, 255, 255, 0.05);
 				}
-
 					#navPanel .link:first-child {
 						border-top: 0;
 					}
-
 					#navPanel .link.depth-0 {
 						color: #fff;
 						font-weight: 600;
@@ -2179,39 +2112,29 @@ input, select, textarea {
 				-ms-transform: translateY(0);
 				transform: translateY(0);
 			}
-
-		/* Wrapper */
-
 			.wrapper {
 				padding: 3em 1em 3em 1em;
 			}
-
 		/* Header */
-
 			#header {
 				background-attachment: scroll;
 				padding: 2.5em 0 0 0;
 			}
-
 				#header .inner {
 					padding-top: 1.5em;
 					padding-left: 1em;
 					padding-right: 1em;
 				}
-
 				#header header > p {
 					font-size: 1em;
 				}
-
 				#header h1 {
 					font-size: 1.75em;
 				}
-
 				#header hr {
 					top: 1em;
 					margin-bottom: 2.5em;
 				}
-
 			body.homepage #header {
 				min-height: 0;
 				padding: 5.5em 0 5em 0;
@@ -2225,23 +2148,17 @@ input, select, textarea {
 				body.homepage #header h1 {
 					font-size: 2.5em;
 				}
-
-		/* Nav */
-
 			#nav {
 				display: none;
 			}
 
 		/* Footer */
-
 			#footer {
 				padding-left: 1em;
 				padding-right: 1em;
 			}
 
 	}
-
-/* Estilos inspirados en la imagen */
 .search-container {
     margin-bottom: 30px;
 }
@@ -2323,7 +2240,7 @@ input, select, textarea {
     left: 0;
     width: 100%;
     z-index: 10000;
-    background-color: #f9d291; /* Color naranja de la imagen */
+    background-color: #f9d291;
     padding: 10px 0;
     display: flex;
     justify-content: center;
@@ -2331,12 +2248,10 @@ input, select, textarea {
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-/* Ajuste para que el contenido no empiece debajo de la barra */
 body {
     padding-top: 80px; 
 }
 
-/* Estilo para los botones redondeados de la imagen */
 .floating-nav button, .button1 {
     border-radius: 20px !important;
     padding: 5px 25px !important;
@@ -2346,14 +2261,17 @@ body {
     cursor: pointer;
 }
 
-.button1 { background-color: #a36b4f; color: white; } /* HOME */
-.button2 { background-color: #ff8c42; color: white; } /* FAVORITES */
-.button3 { background-color: #5d8a5d; color: white; } /* ACCOUNT/PROFILE */
+/* Boton de HOME */
+.button1 { background-color: #a36b4f; color: white; } 
+/* Boton de FAVORITES */
+.button2 { background-color: #ff8c42; color: white; } 
+/* Boton de PROFILE */
+.button3 { background-color: #5d8a5d; color: white; } 
 
 
 /* Banner de Favoritos */
 .favorites-banner {
-    background-color: #f4cccc; /* Color rosado de la imagen */
+    background-color: #f4cccc; 
     color: #8e7f7f;
     text-align: center;
     padding: 15px;
@@ -2364,7 +2282,7 @@ body {
 	margin-top: 50px;
 }
 
-/* Etiqueta con Corazón */
+/* Recetas con corazón */
 .recipe-tag {
     display: flex;
     justify-content: space-between;
@@ -2382,7 +2300,7 @@ body {
     font-size: 1.2em;
 }
 
-/* Ajuste de cards para que se vean amplias como en la imagen */
+
 .recipe-card {
     display: flex;
     gap: 40px;
@@ -2404,7 +2322,6 @@ body {
     min-width: 450px;
 }
 
-/* Contenedor Principal del Perfil */
 .profile-container {
     max-width: 800px;
     margin: 0 auto;
@@ -2415,16 +2332,16 @@ body {
     margin-bottom: 40px;
 }
 
-/* Avatar Circular con Borde */
+/* Borde circular del avatar */
 .avatar-wrapper {
     position: relative;
-    width: 180px;  /* Ancho fijo */
-    height: 180px; /* Alto fijo */
+    width: 180px;  
+    height: 180px; 
     margin: 0 auto 20px;
-    display: flex; /* Centra el contenido si la imagen falla */
+    display: flex; 
     align-items: center;
     justify-content: center;
-    background-color: #f0f0f0; /* Fondo gris claro si no hay imagen */
+    background-color: #f0f0f0; 
     border-radius: 50%;
 	margin-top: 70px;
 }
@@ -2435,15 +2352,15 @@ body {
     border-radius: 50%;
     box-sizing: border-box; 
     border: 8px solid #f9d291; 
-    object-fit: cover; /* Mantiene la proporción de la foto */
+    object-fit: cover; 
     display: block;
 	
 }
 
 .edit-badge {
     position: absolute;
-    bottom: 5px;  /* Ajustado para que no flote lejos */
-    right: 5px;   /* Ajustado para quedar en la esquina del círculo */
+    bottom: 5px;  
+    right: 5px;   
     background: #a36b4f;
     color: white;
     width: 45px;
@@ -2454,8 +2371,8 @@ body {
     justify-content: center;
     cursor: pointer;
     font-size: 1.2em;
-    z-index: 2; /* Asegura que esté por encima */
-    border: 3px solid white; /* Añadido para que resalte */
+    z-index: 2; 
+    border: 3px solid white; 
 }
 
 .edit-badge {
@@ -2490,7 +2407,7 @@ body {
     margin-bottom: 20px;
 }
 
-/* Grilla de Estadísticas */
+/* Lista de Estadísticas */
 .stats-grid {
     display: flex;
     justify-content: space-around;
@@ -2529,10 +2446,10 @@ body {
 
 .settings-list li span {
     font-weight: bold;
-    color: #5d8a5d; /* Color verde del botón Account */
+    color: #5d8a5d; 
 }
 
-/* Botón Log Out */
+/* Botón de Log Out */
 .profile-actions {
     margin-top: 30px;
 }
