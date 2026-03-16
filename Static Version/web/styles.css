@@ -171,3 +171,32 @@ i span{
 }
 
 
+.google-btn {
+  width: 100%;
+  height: 100%; /* Toma los 45px del contenedor .field */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent; 
+  border: 1px solid #000000;
+  color: rgb(158,154,155);
+  font-size: 18px;
+  letter-spacing: 1px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+  outline: none;
+}
+
+.google-btn:hover {
+  background: #7d7d7d36;
+}
+
+.google-btn img {
+  height: 20px;
+  margin-right: 10px;
+  user-select: none;
+  pointer-events: none; /* Evita que la imagen interfiera con el clic */
+}
