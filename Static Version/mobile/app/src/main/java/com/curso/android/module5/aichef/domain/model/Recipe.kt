@@ -28,7 +28,8 @@ data class Recipe(
     val steps: List<String> = emptyList(),
     val imageUri: String = "",
     val generatedImageUrl: String = "",
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val isFavorite: Boolean = false
 ) {
     /**
      * Convierte el modelo a un Map para guardar en Firestore

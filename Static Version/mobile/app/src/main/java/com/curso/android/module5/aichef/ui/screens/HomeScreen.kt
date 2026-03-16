@@ -1,133 +1,122 @@
 package com.curso.android.module5.aichef.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.RestaurantMenu
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.curso.android.module5.aichef.domain.model.Recipe
 import com.curso.android.module5.aichef.ui.viewmodel.ChefViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
-/**
- * =============================================================================
- * HomeScreen - Pantalla principal con lista de recetas
- * =============================================================================
- *
- * CONCEPTO: Query de Firestore por Usuario
- * Las recetas se filtran en el servidor usando:
- * collection("recipes").whereEqualTo("userId", auth.uid)
- *
- * Esto asegura que cada usuario solo ve sus propias recetas,
- * y las reglas de seguridad de Firestore refuerzan esto.
- *
- * CONCEPTO: LazyColumn para listas
- * LazyColumn es el equivalente a RecyclerView en Compose:
- * - Solo renderiza elementos visibles
- * - Soporta scroll infinito
- * - Más eficiente para listas largas
- *
- * =============================================================================
- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: ChefViewModel,
     onNavigateToGenerator: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
+    onNavigateToFavorites: () -> Unit,
     onLogout: () -> Unit
 ) {
-    // Observar lista de recetas
     val recipes by viewModel.recipes.collectAsStateWithLifecycle()
+    var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
+        containerColor = Color(0xFFFDF5E6),
         topBar = {
             TopAppBar(
-                title = { Text("Mis Recetas") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
+                title = { Text("Main Menu", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 actions = {
-                    IconButton(
-                        onClick = {
-                            viewModel.signOut()
-                            onLogout()
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Cerrar sesión"
-                        )
+                    IconButton(onClick = { viewModel.signOut(); onLogout() }) {
+                        Icon(Icons.AutoMirrored.Filled.Logout, "Cerrar sesión", tint = Color.Black)
                     }
                 }
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToGenerator,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Generar nueva receta"
+        bottomBar = {
+            NavigationBar(containerColor = Color.White) {
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Home, null) },
+                    selected = true,
+                    onClick = { },
+                    colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF388E3C))
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Favorite, null) },
+                    selected = false,
+                    onClick = onNavigateToFavorites
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Person, null) },
+                    selected = false,
+                    onClick = {onNavigateToProfile() }
                 )
             }
+        },
+
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {},
+                containerColor = Color(0xFFA6A6A6),
+                contentColor = Color.White,
+                shape = CircleShape
+            ) {
+                Text("🐭", fontSize = 28.sp)
+            }
         }
+
+
     ) { paddingValues ->
-        if (recipes.isEmpty()) {
-            // Estado vacío
-            EmptyRecipesState(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 24.dp)
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(28.dp)),
+                placeholder = { Text("Search") },
+                leadingIcon = { Icon(Icons.Default.Search, null) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color(0xFFE0E0E0),
+                    focusedContainerColor = Color(0xFFE0E0E0),
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Color.Transparent
+                )
             )
-        } else {
-            // Lista de recetas
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .weight(1f)
+                    .padding(horizontal = 4.dp), // Espacio lateral para que la sombra no se corte
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
+
+                userScrollEnabled = true
             ) {
-                items(
-                    items = recipes,
-                    key = { it.id } // Clave única para optimización
-                ) { recipe ->
-                    RecipeCard(
+                items(items = recipes, key = { it.id }) { recipe ->
+                    RecipeCardItem(
                         recipe = recipe,
                         onClick = { onNavigateToDetail(recipe.id) }
                     )
@@ -137,122 +126,60 @@ fun HomeScreen(
     }
 }
 
-/**
- * Card para mostrar una receta individual
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RecipeCard(
+private fun RecipeCardItem(
     recipe: Recipe,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        onClick = onClick
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp)
     ) {
-        Column(
+
+        Card(
+            onClick = onClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .height(200.dp)
+                .padding(end = 12.dp), // Margen para que el ratón no tape el borde
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            // Icono y título
-            androidx.compose.foundation.layout.Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.RestaurantMenu,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp)
-                )
+            Box(modifier = Modifier.fillMaxSize().background(Color.LightGray)) {
 
-                Column(modifier = Modifier.weight(1f)) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(bottom = 20.dp),
+                    color = Color(0xFFFFD180).copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
+                ) {
                     Text(
                         text = recipe.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Text(
-                        text = formatDate(recipe.createdAt),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF5D4037)
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Ingredientes (preview)
-            Text(
-                text = "Ingredientes: ${recipe.ingredients.take(3).joinToString(", ")}${if (recipe.ingredients.size > 3) "..." else ""}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Pasos (preview)
-            Text(
-                text = "${recipe.steps.size} pasos",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.secondary
-            )
         }
-    }
-}
 
-/**
- * Estado cuando no hay recetas
- */
-@Composable
-private fun EmptyRecipesState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(54.dp)
+                .offset(x = (0).dp, y = (8).dp),
+            shape = CircleShape,
+            color = Color(0xFF000000),
+            shadowElevation = 8.dp,
+            onClick = { /* Acción chat */ }
         ) {
-            Icon(
-                imageVector = Icons.Default.Restaurant,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "No tienes recetas guardadas",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "¡Presiona + para generar tu primera receta!",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-            )
+            Box(contentAlignment = Alignment.Center) {
+                Text("🐭", fontSize = 28.sp)
+            }
         }
     }
-}
-
-/**
- * Formatea un timestamp a fecha legible
- */
-private fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
-    return sdf.format(Date(timestamp))
 }
