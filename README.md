@@ -6,3 +6,6 @@ Repository for the Android Cookit app.
 
 ## Mockup
 **Link del video:** https://youtu.be/VOQ8Oyv1wZQ
+
+## Static Version
+**Link del video:** 
