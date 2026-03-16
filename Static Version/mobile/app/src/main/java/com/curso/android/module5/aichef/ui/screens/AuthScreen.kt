@@ -1,89 +1,49 @@
 package com.curso.android.module5.aichef.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.curso.android.module5.aichef.R
 import com.curso.android.module5.aichef.domain.model.UiState
 import com.curso.android.module5.aichef.ui.viewmodel.ChefViewModel
 
-/**
- * =============================================================================
- * AuthScreen - Pantalla de autenticación (Login/Registro)
- * =============================================================================
- *
- * CONCEPTO: Firebase Auth con Compose
- * Esta pantalla maneja tanto login como registro usando Firebase Auth.
- * El estado de la operación se observa desde el ViewModel.
- *
- * CONCEPTO: collectAsStateWithLifecycle
- * Es la forma recomendada de observar StateFlow en Compose.
- * A diferencia de collectAsState(), esta versión:
- * - Detiene la colección cuando la app va a background
- * - Reanuda cuando vuelve a foreground
- * - Evita trabajo innecesario y ahorra batería
- *
- * Requiere la dependencia: lifecycle-runtime-compose
- *
- * =============================================================================
- */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(
     viewModel: ChefViewModel,
     onAuthSuccess: () -> Unit
 ) {
-    // Estado del formulario
+    var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var isLoginMode by rememberSaveable { mutableStateOf(true) }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
-    // Observar estado de UI
     val authUiState by viewModel.authUiState.collectAsStateWithLifecycle()
-
-    // Snackbar para errores
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Manejar estados
     LaunchedEffect(authUiState) {
         when (val state = authUiState) {
             is UiState.Success -> {
@@ -100,154 +60,158 @@ fun AuthScreen(
 
     val isLoading = authUiState is UiState.Loading
 
+    val textFieldColors = TextFieldDefaults.colors(
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        disabledContainerColor = Color.Transparent,
+        focusedIndicatorColor = Color.Black,
+        unfocusedIndicatorColor = Color.Gray,
+        focusedLabelColor = Color.Black,
+        unfocusedLabelColor = Color.Gray
+    )
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(Color(0xFFFDF5E6)) // Fondo crema suave de la imagen
         ) {
-            // Logo/Icono
-            Icon(
-                imageVector = Icons.Default.Restaurant,
+            // Fondo de comida (opcional, ajusta alpha según necesites)
+            Image(
+                painter = painterResource(id = R.drawable.background_food),
                 contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.7f
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = if (isLoginMode) "CookIt" else "Create\nAccount",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 42.sp,
+                        lineHeight = 46.sp
+                    ),
+                    color = Color(0xFF000000),
+                    textAlign = TextAlign.Center
+                )
 
-            // Título
-            Text(
-                text = "AI Chef",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
+                Spacer(modifier = Modifier.height(48.dp))
 
-            Text(
-                text = "Tu asistente de cocina con IA",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                if (!isLoginMode) {
+                    TextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = textFieldColors
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
-            Spacer(modifier = Modifier.height(48.dp))
+                TextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors
+                )
 
-            // Campo de email
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Correo electrónico") },
-                leadingIcon = {
-                    Icon(Icons.Default.Email, contentDescription = null)
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                singleLine = true,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth()
-            )
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
+                TextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = null
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors
+                )
 
-            // Campo de contraseña
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Contraseña") },
-                leadingIcon = {
-                    Icon(Icons.Default.Lock, contentDescription = null)
-                },
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            imageVector = if (passwordVisible) {
-                                Icons.Default.VisibilityOff
-                            } else {
-                                Icons.Default.Visibility
-                            },
-                            contentDescription = if (passwordVisible) {
-                                "Ocultar contraseña"
-                            } else {
-                                "Mostrar contraseña"
-                            }
-                        )
-                    }
-                },
-                visualTransformation = if (passwordVisible) {
-                    VisualTransformation.None
-                } else {
-                    PasswordVisualTransformation()
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                singleLine = true,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth()
-            )
+                Spacer(modifier = Modifier.height(40.dp))
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Botón principal
-            Button(
-                onClick = {
-                    if (validateInput(email, password)) {
+                OutlinedButton(
+                    onClick = {
                         if (isLoginMode) {
                             viewModel.signIn(email, password)
                         } else {
                             viewModel.signUp(email, password)
                         }
-                    }
-                },
-                enabled = !isLoading && email.isNotBlank() && password.isNotBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text(if (isLoginMode) "Iniciar Sesión" else "Registrarse")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Botón secundario (cambiar modo)
-            TextButton(
-                onClick = { isLoginMode = !isLoginMode },
-                enabled = !isLoading
-            ) {
-                Text(
-                    text = if (isLoginMode) {
-                        "¿No tienes cuenta? Regístrate"
-                    } else {
-                        "¿Ya tienes cuenta? Inicia sesión"
                     },
-                    textAlign = TextAlign.Center
-                )
+                    /*enabled = !isLoading && email.isNotBlank() && password.length >= 6, */
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.DarkGray)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.Gray)
+                    } else {
+                        Text(
+                            text = if (isLoginMode) "Log In" else "Sign Up",
+                            color = Color.DarkGray,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Botón de Google
+                OutlinedButton(
+                    onClick = { /* Lógica Google Auth */ },
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.DarkGray)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_google_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = if (isLoginMode) "Log in with Google" else "Sign up with Google",
+                            color = Color.DarkGray
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    TextButton(onClick = { isLoginMode = !isLoginMode }) {
+                        Text(
+                            text = if (isLoginMode) "Create account" else "Log In",
+                            color = Color.Black,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                }
             }
         }
     }
-}
-
-/**
- * Valida los campos del formulario
- */
-private fun validateInput(email: String, password: String): Boolean {
-    if (email.isBlank()) return false
-    if (password.isBlank()) return false
-    if (password.length < 6) return false
-    if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) return false
-    return true
 }

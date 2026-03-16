@@ -19,43 +19,14 @@ import com.curso.android.module5.aichef.domain.model.AuthState
 import com.curso.android.module5.aichef.ui.screens.AuthScreen
 import com.curso.android.module5.aichef.ui.screens.GeneratorScreen
 import com.curso.android.module5.aichef.ui.screens.HomeScreen
+import com.curso.android.module5.aichef.ui.screens.FavoritesScreen
+import com.curso.android.module5.aichef.ui.screens.ProfileScreen
 import com.curso.android.module5.aichef.ui.screens.RecipeDetailScreen
 import com.curso.android.module5.aichef.ui.theme.AiChefTheme
 import com.curso.android.module5.aichef.ui.viewmodel.ChefViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
-/**
- * =============================================================================
- * MainActivity - Activity principal con navegación protegida
- * =============================================================================
- *
- * CONCEPTO: @AndroidEntryPoint
- * Esta anotación es OBLIGATORIA para Activities/Fragments que usen Hilt.
- * Permite que Hilt inyecte dependencias en la Activity y sus Composables.
- *
- * CONCEPTO: AuthGuard en Navigation Compose
- * La navegación debe ser "protegida" - si el usuario no está autenticado,
- * debe ser redirigido a la pantalla de login.
- *
- * Hay dos enfoques principales:
- *
- * 1. Decisión en la navegación inicial (usado aquí):
- *    - Observar el estado de auth
- *    - Decidir startDestination basado en si hay sesión
- *
- * 2. LaunchedEffect en cada pantalla:
- *    - Cada pantalla verifica auth y redirige si es necesario
- *    - Más código pero más control
- *
- * CONCEPTO: ViewModel compartido
- * El ChefViewModel se crea a nivel de Navigation para ser compartido
- * entre todas las pantallas. Esto permite:
- * - Mantener estado consistente (auth, recetas)
- * - Evitar recrear el ViewModel en cada navegación
- * - Compartir datos entre pantallas sin argumentos
- *
- * =============================================================================
- */
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -83,47 +54,19 @@ class MainActivity : ComponentActivity() {
 object NavRoutes {
     const val AUTH = "auth"
     const val HOME = "home"
+
+    const val FAVORITES = "favorites"
     const val GENERATOR = "generator"
     const val RECIPE_DETAIL = "recipe_detail/{recipeId}"
+    const val PROFILE = "profile"
 
     fun recipeDetail(recipeId: String) = "recipe_detail/$recipeId"
 }
 
-/**
- * Configuración de navegación con AuthGuard
- *
- * FLUJO DE NAVEGACIÓN:
- *
- * ┌─────────────┐
- * │  AuthState  │
- * └──────┬──────┘
- *        │
- *        ▼
- * ┌──────────────────┐     ┌──────────────────┐
- * │  Unauthenticated │────▶│    AuthScreen    │
- * └──────────────────┘     └────────┬─────────┘
- *                                   │ Login/Signup success
- *                                   ▼
- * ┌──────────────────┐     ┌──────────────────┐
- * │  Authenticated   │────▶│    HomeScreen    │
- * └──────────────────┘     └────────┬─────────┘
- *                                   │ FAB click
- *                                   ▼
- *                          ┌──────────────────┐
- *                          │ GeneratorScreen  │
- *                          └────────┬─────────┘
- *                                   │ Recipe generated
- *                                   ▼
- *                          ┌──────────────────┐
- *                          │    HomeScreen    │
- *                          └──────────────────┘
- */
 @Composable
 fun AiChefNavigation() {
     val navController = rememberNavController()
 
-    // ViewModel compartido entre todas las pantallas
-    // hiltViewModel() obtiene el ViewModel del grafo de Hilt
     val viewModel: ChefViewModel = hiltViewModel()
 
     // Observar estado de autenticación
@@ -133,7 +76,7 @@ fun AiChefNavigation() {
     val startDestination = when (authState) {
         is AuthState.Authenticated -> NavRoutes.HOME
         is AuthState.Unauthenticated -> NavRoutes.AUTH
-        else -> NavRoutes.AUTH // Loading o Error -> mostrar auth
+        else -> NavRoutes.AUTH
     }
 
     NavHost(
@@ -145,7 +88,6 @@ fun AiChefNavigation() {
             AuthScreen(
                 viewModel = viewModel,
                 onAuthSuccess = {
-                    // Navegar a Home y limpiar el back stack
                     navController.navigate(NavRoutes.HOME) {
                         popUpTo(NavRoutes.AUTH) { inclusive = true }
                     }
@@ -163,12 +105,30 @@ fun AiChefNavigation() {
                 onNavigateToDetail = { recipeId ->
                     navController.navigate(NavRoutes.recipeDetail(recipeId))
                 },
+                onNavigateToFavorites = {
+                    navController.navigate("favorites")
+                },
+                onNavigateToProfile = {
+                    navController.navigate(NavRoutes.PROFILE)
+                },
                 onLogout = {
-                    // Navegar a Auth y limpiar el back stack
                     navController.navigate(NavRoutes.AUTH) {
                         popUpTo(NavRoutes.HOME) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(NavRoutes.FAVORITES) {
+            val recipes by viewModel.recipes.collectAsStateWithLifecycle()
+            val favoriteRecipes = recipes.filter { it.isFavorite }
+
+            FavoritesScreen(
+                onNavigateBack = { navController.navigate(NavRoutes.HOME) },
+                onNavigateToProfile = {
+                    navController.navigate(NavRoutes.PROFILE)
+                },
+                favoriteRecipes = favoriteRecipes
             )
         }
 
@@ -177,10 +137,9 @@ fun AiChefNavigation() {
             GeneratorScreen(
                 viewModel = viewModel,
                 onNavigateBack = {
-                    navController.popBackStack()
+                    navController.navigate(NavRoutes.HOME)
                 },
                 onRecipeGenerated = {
-                    // Volver al Home después de generar
                     navController.popBackStack()
                 }
             )
@@ -194,6 +153,26 @@ fun AiChefNavigation() {
                 recipeId = recipeId,
                 onNavigateBack = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        //Pantalla de perfil
+        composable(NavRoutes.PROFILE) {
+
+            ProfileScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onLogout = {
+
+                    viewModel.signOut()
+                    navController.navigate(NavRoutes.AUTH) {
+                        popUpTo(NavRoutes.HOME) { inclusive = true }
+                    }
+                },
+                onNavigateToFavorites = {
+                    navController.navigate(NavRoutes.FAVORITES)
                 }
             )
         }
