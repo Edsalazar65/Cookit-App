@@ -1,0 +1,202 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700|Poppins:400,500&display=swap');
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+}
+.bg-img{
+  background: url('images/bg.png');
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+}
+.bg-img:after{
+  position: absolute;
+  content: '';
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  
+}
+.content{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 999;
+  text-align: center;
+  padding: 60px 32px;
+  width: 370px;
+  transform: translate(-50%,-50%);
+  background: rgba(255,255,255,0.04);
+  box-shadow: -1px 4px 28px 0px rgba(0,0,0,0.75);
+}
+.content header{
+  color: white;
+  font-size: 33px;
+  font-weight: 600;
+  margin: 0 0 35px 0;
+  font-family: 'Montserrat',sans-serif;
+}
+.field{
+  position: relative;
+  height: 45px;
+  width: 100%;
+  display: flex;
+  
+}
+.field span{
+  color: #222;
+  width: 40px;
+  line-height: 45px;
+}
+.field input{
+  height: 100%;
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #000000;
+  font-size: 16px;
+  font-family: 'Poppins',sans-serif;
+  background-color: transparent;
+
+}
+.input::placeholder{
+  color: #000000;
+}
+.space{
+  margin-top: 16px;
+}
+.show{
+  position: absolute;
+  right: 13px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #222;
+  display: none;
+  cursor: pointer;
+  font-family: 'Montserrat',sans-serif;
+}
+.pass-key:valid ~ .show{
+  display: block;
+}
+.pass{
+  text-align: left;
+  margin: 10px 0;
+}
+.pass a{
+  color: white;
+  text-decoration: none;
+  font-family: 'Poppins',sans-serif;
+}
+.pass:hover a{
+  text-decoration: underline;
+}
+.field input[type="submit"]{
+  background: #ffffff00;
+  border: 1px solid #000000;
+  color: rgb(158,154,155);
+  font-size: 18px;
+  letter-spacing: 1px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Montserrat',sans-serif;
+  border-radius: 10px;
+}
+.field input[type="submit"]:hover{
+  background: #7d7d7d36;
+}
+.login{
+  color: white;
+  margin: 20px 0;
+  font-family: 'Poppins',sans-serif;
+}
+.links{
+  display: flex;
+  cursor: pointer;
+  color: rgb(158,154,155);
+  margin: 0 0 20px 0;
+  font-family: 'Poppins',sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+.google{
+  width: 100%;
+  height: 45px;
+  line-height: 45px;
+  margin-left: 10px;
+  font-family: 'Poppins',sans-serif;
+}
+.google{
+  margin-left: 0;
+  background: #ffffff00;
+  border: 1px solid #000000;
+  border-radius: 10px;
+}
+
+.google:hover{
+  background: #7d7d7d36;
+}
+
+.links i{
+  font-size: 17px;
+}
+i span{
+  margin-left: 8px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  font-size: 16px;
+  font-family: 'Poppins',sans-serif;
+}
+.signup{
+  font-size: 15px;
+  color: white;
+  font-family: 'Poppins',sans-serif;
+}
+.signup a{
+  color: #3498db;
+  text-decoration: none;
+}
+.signup a:hover{
+  text-decoration: underline;
+}
+
+.transparent-input{
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: black;
+}
+
+
+.google-btn {
+  width: 100%;
+  height: 100%; /* Toma los 45px del contenedor .field */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent; 
+  border: 1px solid #000000;
+  color: rgb(158,154,155);
+  font-size: 18px;
+  letter-spacing: 1px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+  outline: none;
+}
+
+.google-btn:hover {
+  background: #7d7d7d36;
+}
+
+.google-btn img {
+  height: 20px;
+  margin-right: 10px;
+  user-select: none;
+  pointer-events: none; /* Evita que la imagen interfiera con el clic */
+}

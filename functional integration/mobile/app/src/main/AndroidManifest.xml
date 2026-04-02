@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+=============================================================================
+AI CHEF - MÓDULO 5: FIREBASE AI LOGIC
+AndroidManifest.xml
+=============================================================================
+Configuración de la aplicación.
+
+IMPORTANTE SOBRE SEGURIDAD:
+- NO hay API Keys hardcodeadas en este proyecto
+- Firebase AI Logic maneja la autenticación con los servidores de Google
+- La seguridad adicional se configura con Firebase App Check
+- Las credenciales de Firebase vienen del archivo google-services.json
+=============================================================================
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Permiso de Internet requerido para Firebase -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Permiso para verificar estado de red (opcional, mejora UX) -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:name=".AiChefApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AIChef">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AIChef">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

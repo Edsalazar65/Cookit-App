@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI Chef</string>
+
+    <!-- Auth Screen -->
+    <string name="auth_title">AI Chef</string>
+    <string name="auth_subtitle">Tu asistente de cocina con IA</string>
+    <string name="email_label">Correo electrónico</string>
+    <string name="password_label">Contraseña</string>
+    <string name="login_button">Iniciar Sesión</string>
+    <string name="register_button">Registrarse</string>
+    <string name="switch_to_register">¿No tienes cuenta? Regístrate</string>
+    <string name="switch_to_login">¿Ya tienes cuenta? Inicia sesión</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Mis Recetas</string>
+    <string name="empty_recipes">No tienes recetas guardadas.\n¡Genera tu primera receta!</string>
+    <string name="logout">Cerrar Sesión</string>
+
+    <!-- Generator Screen -->
+    <string name="generator_title">Generar Receta</string>
+    <string name="select_image">Seleccionar Imagen</string>
+    <string name="generate_recipe">Generar Receta</string>
+    <string name="generating">Analizando imagen con IA...</string>
+    <string name="image_selected">Imagen seleccionada</string>
+    <string name="no_image">Selecciona una foto de ingredientes</string>
+
+    <!-- Errors -->
+    <string name="error_email_empty">Ingresa tu correo electrónico</string>
+    <string name="error_password_empty">Ingresa tu contraseña</string>
+    <string name="error_password_short">La contraseña debe tener al menos 6 caracteres</string>
+    <string name="error_invalid_email">Correo electrónico inválido</string>
+    <string name="error_user_not_found">Usuario no encontrado</string>
+    <string name="error_wrong_password">Contraseña incorrecta</string>
+    <string name="error_email_in_use">Este correo ya está registrado</string>
+    <string name="error_generic">Ocurrió un error. Intenta de nuevo.</string>
+    <string name="error_no_image">Selecciona una imagen primero</string>
+    <string name="error_generation_failed">Error al generar la receta</string>
+    <string name="error_quota_exceeded">Cuota de API excedida. Intenta más tarde.</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_recipe_image">Imagen de la receta</string>
+    <string name="cd_selected_image">Imagen seleccionada para análisis</string>
+    <string name="cd_add_recipe">Agregar nueva receta</string>
+</resources>

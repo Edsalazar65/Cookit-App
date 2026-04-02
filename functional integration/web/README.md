@@ -1,0 +1,1 @@
+# Static version - Kookit App Web
