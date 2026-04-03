@@ -14,8 +14,6 @@ app.post("/api/chat", async (req, res) => {
   try {
     const { prompt } = req.body;
 
-    // CAMBIO AQUÍ: Usamos gemini-pro que es el modelo más compatible
-    // En tu server.js
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash", // O el que estés usando
       systemInstruction:
