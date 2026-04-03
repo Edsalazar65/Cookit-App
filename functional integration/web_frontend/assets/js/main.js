@@ -1,4 +1,8 @@
-// Lógica para el Agente Remy (Gemini)
+import { auth, db } from './firebase-init.js';
+import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+
+
 $(document).ready(function () {
   const $userInput = $("#user-input");
   const $sendBtn = $("#send-btn");
