@@ -1,72 +1,72 @@
-import { auth, db } from './firebase-init.js';
-import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-
+import { auth } from "./firebase-init.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 $(document).ready(function () {
   const $userInput = $("#user-input");
   const $sendBtn = $("#send-btn");
   const $messagesContainer = $("#messages");
 
+  let currentUserId = null;
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUserId = user.uid;
+      console.log("Welcome, Chef! ID:", currentUserId);
+    } else {
+      currentUserId = null;
+      console.warn(
+        "No hay usuario detectado. Remy no podrá ver el inventario.",
+      );
+    }
+  });
+
   async function sendMessage() {
     const message = $userInput.val().trim();
     if (!message || $sendBtn.prop("disabled")) return;
 
     $sendBtn.prop("disabled", true);
-    $userInput.val(""); // Limpiar entrada
+    $userInput.val(""); 
 
-    // 1. Mostrar mensaje del usuario al PRINCIPIO (usando prepend)
     $messagesContainer.prepend(`
-        <div class="user-message" style="margin-bottom: 10px; text-align: right;">
-            <strong style="color: #ed7d31;">Tú:</strong> <span>${message}</span>
+        <div class="user-message" style="margin-bottom: 15px; text-align: right;">
+            <strong style="color: #ed7d31;">Tú:</strong> 
+            <p style="background: #fff3e0; display: inline-block; padding: 8px 12px; border-radius: 10px; margin: 0;">${message}</p>
         </div>
     `);
 
-    // 2. Mostrar indicador de carga al principio
-    const $loading = $(
-      '<div class="bot-message"><em>Remy está pensando... 🐭</em></div>',
-    );
+    const $loading = $(`<div class="bot-message" style="margin-bottom: 15px;"><strong>Remy:</strong> <em> Preparando... 🐭🍳</em></div>`);
     $messagesContainer.prepend($loading);
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: message }),
+        body: JSON.stringify({
+          prompt: message,
+          userId: currentUserId 
+        }),
       });
 
       const data = await response.json();
-      $loading.remove(); // Quitar indicador de carga
+      $loading.remove();
 
-      const respuestaRemy =
-        data && data.text
-          ? data.text
-          : "🐭 Oh non! Algo salió mal en mi cocina.";
-
-      // 3. Mostrar respuesta de Remy al PRINCIPIO
       $messagesContainer.prepend(`
-          <div class="bot-message">
-              <strong>Remy:</strong> <span>${respuestaRemy}</span>
+          <div class="bot-message" style="margin-bottom: 15px;">
+              <strong style="color: #2e7d32;">Remy:</strong> 
+              <p style="background: #e8f5e9; display: inline-block; padding: 8px 12px; border-radius: 10px; margin: 0;">${data.text}</p>
           </div>
       `);
 
-      // 4. Opcional: Volver el scroll al tope si el contenedor tiene scroll
-      $messagesContainer.scrollTop(0);
     } catch (error) {
       $loading.remove();
-      $messagesContainer.prepend(
-        `<p style="color:red;">Remy se escondió en la cocina.</p>`,
-      );
+      console.error("Error:", error);
     } finally {
       $sendBtn.prop("disabled", false);
     }
   }
 
-  // Evento click
+  // EVENTOS
   $sendBtn.on("click", sendMessage);
 
-  // Evento Enter
-  $userInput.on("keypress", function (e) {
-    if (e.which === 13) sendMessage();
-  });
+  $userInput.on("keypress", (e) => { if (e.which === 13) sendMessage(); });
 });
