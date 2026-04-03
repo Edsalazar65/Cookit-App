@@ -58,3 +58,16 @@ secrets.properties
 # Windows
 Thumbs.db
 ehthumbs.db
+
+
+# Claves de Firebase y configuraciones locales
+app/google-services.json
+local.properties
+
+# Archivos de configuración locales de IDEs/Herramientas
+.claude/
+.idea/
+*.iml
+
+app/build/
+/buildOutputCleanup/
