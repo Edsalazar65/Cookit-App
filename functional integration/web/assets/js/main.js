@@ -1,217 +1,68 @@
-/*
-	Helios by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
-*/
+// Lógica para el Agente Remy (Gemini)
+$(document).ready(function () {
+  const $userInput = $("#user-input");
+  const $sendBtn = $("#send-btn");
+  const $messagesContainer = $("#messages");
 
-(function($) {
+  async function sendMessage() {
+    const message = $userInput.val().trim();
+    if (!message || $sendBtn.prop("disabled")) return;
 
-	var	$window = $(window),
-		$body = $('body'),
-		settings = {
+    $sendBtn.prop("disabled", true);
+    $userInput.val(""); // Limpiar entrada
 
-			// Carousels
-				carousels: {
-					speed: 4,
-					fadeIn: true,
-					fadeDelay: 250
-				},
+    // 1. Mostrar mensaje del usuario al PRINCIPIO (usando prepend)
+    $messagesContainer.prepend(`
+        <div class="user-message" style="margin-bottom: 10px; text-align: right;">
+            <strong style="color: #ed7d31;">Tú:</strong> <span>${message}</span>
+        </div>
+    `);
 
-		};
+    // 2. Mostrar indicador de carga al principio
+    const $loading = $(
+      '<div class="bot-message"><em>Remy está pensando... 🐭</em></div>',
+    );
+    $messagesContainer.prepend($loading);
 
-	// Breakpoints.
-		breakpoints({
-			wide:      [ '1281px',  '1680px' ],
-			normal:    [ '961px',   '1280px' ],
-			narrow:    [ '841px',   '960px'  ],
-			narrower:  [ '737px',   '840px'  ],
-			mobile:    [ null,      '736px'  ]
-		});
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: message }),
+      });
 
-	// Play initial animations on page load.
-		$window.on('load', function() {
-			window.setTimeout(function() {
-				$body.removeClass('is-preload');
-			}, 100);
-		});
+      const data = await response.json();
+      $loading.remove(); // Quitar indicador de carga
 
-	// Dropdowns.
-		$('#nav > ul').dropotron({
-			mode: 'fade',
-			speed: 350,
-			noOpenerFade: true,
-			alignment: 'center'
-		});
+      const respuestaRemy =
+        data && data.text
+          ? data.text
+          : "🐭 Oh non! Algo salió mal en mi cocina.";
 
-	// Scrolly.
-		$('.scrolly').scrolly();
+      // 3. Mostrar respuesta de Remy al PRINCIPIO
+      $messagesContainer.prepend(`
+          <div class="bot-message">
+              <strong>Remy:</strong> <span>${respuestaRemy}</span>
+          </div>
+      `);
 
-	// Nav.
+      // 4. Opcional: Volver el scroll al tope si el contenedor tiene scroll
+      $messagesContainer.scrollTop(0);
+    } catch (error) {
+      $loading.remove();
+      $messagesContainer.prepend(
+        `<p style="color:red;">Remy se escondió en la cocina.</p>`,
+      );
+    } finally {
+      $sendBtn.prop("disabled", false);
+    }
+  }
 
-		// Button.
-			$(
-				'<div id="navButton">' +
-					'<a href="#navPanel" class="toggle"></a>' +
-				'</div>'
-			)
-				.appendTo($body);
+  // Evento click
+  $sendBtn.on("click", sendMessage);
 
-		// Panel.
-			$(
-				'<div id="navPanel">' +
-					'<nav>' +
-						$('#nav').navList() +
-					'</nav>' +
-				'</div>'
-			)
-				.appendTo($body)
-				.panel({
-					delay: 500,
-					hideOnClick: true,
-					hideOnSwipe: true,
-					resetScroll: true,
-					resetForms: true,
-					target: $body,
-					visibleClass: 'navPanel-visible'
-				});
-
-	// Carousels.
-		$('.carousel').each(function() {
-
-			var	$t = $(this),
-				$forward = $('<span class="forward"></span>'),
-				$backward = $('<span class="backward"></span>'),
-				$reel = $t.children('.reel'),
-				$items = $reel.children('article');
-
-			var	pos = 0,
-				leftLimit,
-				rightLimit,
-				itemWidth,
-				reelWidth,
-				timerId;
-
-			// Items.
-				if (settings.carousels.fadeIn) {
-
-					$items.addClass('loading');
-
-					$t.scrollex({
-						mode: 'middle',
-						top: '-20vh',
-						bottom: '-20vh',
-						enter: function() {
-
-							var	timerId,
-								limit = $items.length - Math.ceil($window.width() / itemWidth);
-
-							timerId = window.setInterval(function() {
-								var x = $items.filter('.loading'), xf = x.first();
-
-								if (x.length <= limit) {
-
-									window.clearInterval(timerId);
-									$items.removeClass('loading');
-									return;
-
-								}
-
-								xf.removeClass('loading');
-
-							}, settings.carousels.fadeDelay);
-
-						}
-					});
-
-				}
-
-			// Main.
-				$t._update = function() {
-					pos = 0;
-					rightLimit = (-1 * reelWidth) + $window.width();
-					leftLimit = 0;
-					$t._updatePos();
-				};
-
-				$t._updatePos = function() { $reel.css('transform', 'translate(' + pos + 'px, 0)'); };
-
-			// Forward.
-				$forward
-					.appendTo($t)
-					.hide()
-					.mouseenter(function(e) {
-						timerId = window.setInterval(function() {
-							pos -= settings.carousels.speed;
-
-							if (pos <= rightLimit)
-							{
-								window.clearInterval(timerId);
-								pos = rightLimit;
-							}
-
-							$t._updatePos();
-						}, 10);
-					})
-					.mouseleave(function(e) {
-						window.clearInterval(timerId);
-					});
-
-			// Backward.
-				$backward
-					.appendTo($t)
-					.hide()
-					.mouseenter(function(e) {
-						timerId = window.setInterval(function() {
-							pos += settings.carousels.speed;
-
-							if (pos >= leftLimit) {
-
-								window.clearInterval(timerId);
-								pos = leftLimit;
-
-							}
-
-							$t._updatePos();
-						}, 10);
-					})
-					.mouseleave(function(e) {
-						window.clearInterval(timerId);
-					});
-
-			// Init.
-				$window.on('load', function() {
-
-					reelWidth = $reel[0].scrollWidth;
-
-					if (browser.mobile) {
-
-						$reel
-							.css('overflow-y', 'hidden')
-							.css('overflow-x', 'scroll')
-							.scrollLeft(0);
-						$forward.hide();
-						$backward.hide();
-
-					}
-					else {
-
-						$reel
-							.css('overflow', 'visible')
-							.scrollLeft(0);
-						$forward.show();
-						$backward.show();
-
-					}
-
-					$t._update();
-
-					$window.on('resize', function() {
-						reelWidth = $reel[0].scrollWidth;
-						$t._update();
-					}).trigger('resize');
-
-				});
-
-		});
-
-})(jQuery);
+  // Evento Enter
+  $userInput.on("keypress", function (e) {
+    if (e.which === 13) sendMessage();
+  });
+});
