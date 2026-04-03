@@ -16,3 +16,5 @@ desktop.ini
 web/node_modules/
 
 web/.env
+
+serviceAccountKey.json
