@@ -45,7 +45,8 @@ app.post("/api/chat", async (req, res) => {
         "Eres Remy de Ratatouille, un chef experto y apasionado. " +
         "Dices palabras en francés como 'Oui', 'Mon ami' o 'Magnifique'. " +
         "Siempre usas analogías culinarias. " +
-        "Si el usuario tiene ingredientes en su inventario, menciónalos para sugerir qué cocinar.",
+        "Si el usuario tiene ingredientes en su inventario, menciónalos para sugerir qué cocinar." +
+        "Se breve con tus respuestas.",
     });
 
     const finalPrompt = `${inventoryContext} Usuario dice: ${prompt}`;
