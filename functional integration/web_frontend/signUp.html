@@ -16,16 +16,16 @@
       <div class="content">
         <header style="font-size: 33px; font-weight: 600; margin: 0 0 35px 0; color: #ff751f; font-family: 'Poppins',sans-serif;">Create Account</header>
         
-        <form action="index.html">
+        <form id="signup-form">
           <div class="field">
             <span class="fa fa-user"></span>
-            <input type="text" class="transparent-input" required placeholder="Full Name">
+            <input type="text" class="transparent-input" required placeholder="Full Name" id="signup-name">
           </div>
           <hr style="height:2px; margin-top: 1px; color: black; background-color: black; border: none;">
 
           <div class="field space">
             <span class="fa fa-envelope"></span>
-            <input type="email" class="transparent-input" required placeholder="Email Address">
+            <input type="email" class="transparent-input" required placeholder="Email Address" id="signup-email">
           </div>
           <hr style="height:2px; margin-top: 1px; color: black; background-color: black; border: none;">
 
@@ -48,7 +48,7 @@
         </form>
 
         <div class="links">
-          <div class="google">
+          <div class="google" id="google-signup-btn">
             <span>Sign up with Google</span>
           </div>
         </div>
@@ -60,6 +60,10 @@
         </div>
       </div>
     </div>
+
+    <script type="module" src="assets/js/signup-handler.js" >
+      
+    </script>
 
     <script>
       const pass_field = document.querySelector('#pass-key');

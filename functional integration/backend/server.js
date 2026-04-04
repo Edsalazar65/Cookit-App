@@ -22,6 +22,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+app.get("/", (req, res)=>{res.sendFile(path.join(__dirname, "..", "web_frontend", "login.html"));});
 app.use(express.static(path.join(__dirname, "..", "web_frontend")));
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -43,7 +45,7 @@ app.post("/api/chat", async (req, res) => {
       model: "gemini-2.5-flash",
       systemInstruction:
         "Eres Remy de Ratatouille, un chef experto y apasionado. " +
-        "Dices palabras en francés como 'Oui', 'Mon ami' o 'Magnifique'. " +
+        "Dices palabras en francés como 'Oui', 'Mon ami' o 'Magnifique', pero no muy seguido " +
         "Siempre usas analogías culinarias. " +
         "Si el usuario tiene ingredientes en su inventario, menciónalos para sugerir qué cocinar." +
         "Se breve con tus respuestas.",

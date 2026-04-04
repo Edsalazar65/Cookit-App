@@ -25,9 +25,9 @@ $(document).ready(function () {
     if (!message || $sendBtn.prop("disabled")) return;
 
     $sendBtn.prop("disabled", true);
-    $userInput.val(""); 
+    $userInput.val("");
 
-    $messagesContainer.prepend(`
+    $messagesContainer.append(`
         <div class="user-message" style="margin-bottom: 15px; text-align: right;">
             <strong style="color: #ed7d31;">Tú:</strong> 
             <p style="background: #fff3e0; display: inline-block; padding: 8px 12px; border-radius: 10px; margin: 0;">${message}</p>
@@ -35,7 +35,7 @@ $(document).ready(function () {
     `);
 
     const $loading = $(`<div class="bot-message" style="margin-bottom: 15px;"><strong>Remy:</strong> <em> Preparando... 🐭🍳</em></div>`);
-    $messagesContainer.prepend($loading);
+    $messagesContainer.append($loading);
 
     try {
       const response = await fetch("/api/chat", {
@@ -43,20 +43,21 @@ $(document).ready(function () {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: message,
-          userId: currentUserId 
+          userId: currentUserId
         }),
       });
+      $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
 
       const data = await response.json();
       $loading.remove();
 
-      $messagesContainer.prepend(`
+      $messagesContainer.append(`
           <div class="bot-message" style="margin-bottom: 15px;">
               <strong style="color: #2e7d32;">Remy:</strong> 
               <p style="background: #e8f5e9; display: inline-block; padding: 8px 12px; border-radius: 10px; margin: 0;">${data.text}</p>
           </div>
       `);
-
+      $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
     } catch (error) {
       $loading.remove();
       console.error("Error:", error);
