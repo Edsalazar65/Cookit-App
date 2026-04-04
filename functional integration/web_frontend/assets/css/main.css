@@ -1611,14 +1611,16 @@ button,
 	background-color: rgb(6, 126, 6);
 }
 
-.button1:hover{
-	background-color:rgb(205, 133, 0) ;
+.button1:hover {
+	background-color: rgb(205, 133, 0);
 }
-.button2:hover{
-	background-color:rgb(147, 17, 17) ;
+
+.button2:hover {
+	background-color: rgb(147, 17, 17);
 }
-.button3:hover{
-	background-color:rgb(5, 71, 5);
+
+.button3:hover {
+	background-color: rgb(5, 71, 5);
 }
 
 input[type="button"].alt,
@@ -2381,6 +2383,7 @@ body.homepage #header h1 {
 	background: #e3d5a1;
 	border-radius: 30px;
 	height: 500px;
+	
 	position: relative;
 	padding: 20px;
 }

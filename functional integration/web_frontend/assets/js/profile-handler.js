@@ -8,7 +8,7 @@ const logOutBtn=document.getElementById("logout-btn");
 
 onAuthStateChanged(auth, async(user)=> {
     if (user){
-        const userDoc= await getDoc(doc(db, "users", "user.uid"));
+        const userDoc= await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists() && userDoc.data().name){
             nameDisplay.textContent= `Chef ${userDoc.data().name}`;
         } else if(user.displayName){
