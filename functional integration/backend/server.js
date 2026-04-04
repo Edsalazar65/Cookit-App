@@ -63,5 +63,5 @@ app.post("/api/chat", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Cocina de Remy abierta en http://localhost:${PORT}`);
+  console.log(`Cocina abierta en http://localhost:${PORT}`);
 });

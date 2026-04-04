@@ -34,17 +34,22 @@ signupForm.addEventListener("submit", async(e)=>{
 });
 
 googleBtn.addEventListener("click", async()=>{
-    const provider= new GoogleAuthProvider();
+    const provider = new GoogleAuthProvider();
 
-    try{
-        const result= await signInWithPopup(auth, provider);
-        const user= result.user;
-         await setDoc(doc(db, "users", user.uid), {
-            name: name, email: email, inventory: [], recipes: [] 
-        }, {merge:true});
-        window.location.href ="index.html";
-    } catch(error){
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+            name: user.displayName, 
+            email: user.email,       
+            inventory: [], 
+            myRecipes: [],
+            favorites: []
+        }, { merge: true });
+
+        window.location.href = "index.html";
+    } catch(error) {
         console.error("Error al hacer Sign Up con Google", error);
     }
-
 });
