@@ -176,18 +176,6 @@ body {
 	font-weight: 300;
 }
 
-body.is-preload *,
-body.is-preload *:before,
-body.is-preload *:after {
-	-moz-animation: none !important;
-	-webkit-animation: none !important;
-	-ms-animation: none !important;
-	animation: none !important;
-	-moz-transition: none !important;
-	-webkit-transition: none !important;
-	-ms-transition: none !important;
-	transition: none !important;
-}
 
 input,
 textarea,
@@ -1512,22 +1500,6 @@ form textarea {
 	min-height: 9em;
 }
 
-form ::-webkit-input-placeholder {
-	color: #555 !important;
-}
-
-form :-moz-placeholder {
-	color: #555 !important;
-}
-
-form ::-moz-placeholder {
-	color: #555 !important;
-}
-
-form :-ms-input-placeholder {
-	color: #555 !important;
-}
-
 form ::-moz-focus-inner {
 	border: 0;
 }
@@ -1599,6 +1571,10 @@ button,
 	transition: background-color 0.35s ease-in-out, color 0.35s ease-in-out, border-bottom-color 0.35s ease-in-out;
 }
 
+button:active {
+	transform: translateY(-2px) scale(0.98);
+}
+
 .button1 {
 	background-color: rgb(255, 132, 0);
 }
@@ -1642,28 +1618,6 @@ button.alt:hover,
 
 /* Icons */
 
-.icon {
-	text-decoration: none;
-	text-decoration: none;
-}
-
-.icon:before {
-	-moz-osx-font-smoothing: grayscale;
-	-webkit-font-smoothing: antialiased;
-	display: inline-block;
-	font-style: normal;
-	font-variant: normal;
-	text-rendering: auto;
-	line-height: 1;
-	text-transform: none !important;
-	font-family: 'Font Awesome 5 Free';
-	font-weight: 400;
-}
-
-.icon:before {
-	line-height: inherit;
-	font-size: 1.25em;
-}
 
 .icon>.label {
 	display: none;
@@ -1791,7 +1745,7 @@ body.homepage #header h1 {
 
 
 /* Nav */
-
+/*
 #nav {
 	position: absolute;
 	top: 0;
@@ -1918,6 +1872,8 @@ body.homepage #header h1 {
 	border-left: solid 0.75em rgba(64, 64, 64, 0);
 	border-right: solid 0.75em rgba(64, 64, 64, 0);
 }
+*/
+
 
 /* Footer */
 
@@ -2364,13 +2320,15 @@ body.homepage #header h1 {
 	display: block;
 	background: #f9d291;
 	padding: 5px 15px;
-	border-radius: 15px;
+	border-radius: 30px;
 	margin-top: 10px;
+	margin-bottom: 0px;
 	font-weight: bold;
 	text-align: center;
 }
 
 .ingredients-box {
+	height: 100%;
 	background: #f9d291;
 	padding: 20px;
 	border-radius: 30px;
@@ -2382,7 +2340,7 @@ body.homepage #header h1 {
 	background: #e3d5a1;
 	border-radius: 30px;
 	height: 500px;
-	
+
 	position: relative;
 	padding: 20px;
 }
@@ -2435,9 +2393,10 @@ body {
 	cursor: pointer;
 }
 
-/* Banner de Favoritos */
-.favorites-banner {
-	background-color: #f4cccc;
+
+
+.recipe-name-banner{
+	background-color: #beeafc;
 	color: #8e7f7f;
 	text-align: center;
 	padding: 15px;
@@ -2446,6 +2405,43 @@ body {
 	border-radius: 50px;
 	margin-bottom: 40px;
 	margin-top: 50px;
+}
+
+/* Banner de Favoritos */
+.favorites-banner {
+	background-color: #fcbebe;
+	color: #8e7f7f;
+	text-align: center;
+	padding: 15px;
+	font-size: 1.5em;
+	font-weight: bold;
+	border-radius: 50px;
+	margin-bottom: 40px;
+	margin-top: 50px;
+}
+
+.fav-btn {
+	transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+	cursor: pointer;
+	position: relative;
+	z-index: 1;
+	margin-top: 10px;
+	margin-left: 0;
+	margin-bottom: 7px;
+	width: 100%;
+	background-color: #ff8400
+}
+
+
+.fav-btn:hover {
+	transform: translateX(8px) scale(1.01);
+	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+	border-color: #ff751f;
+
+}
+
+.fav-btn:active {
+	transform: translateY(-2px) scale(0.98);
 }
 
 /* Recetas con corazón */
@@ -2468,11 +2464,31 @@ body {
 
 
 .recipe-card {
+	transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+	cursor: pointer;
+	position: relative;
+	z-index: 1;
+	margin-bottom: 20px;
+	background-color: #ebb175;
+	border-radius: 30px;
 	display: flex;
 	gap: 40px;
 	margin-bottom: 50px;
 	justify-content: center;
 }
+
+.recipe-card:hover {
+	transform: translateX(8px) scale(1.01);
+	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+	border-color: #ff751f;
+
+}
+
+.recipe-card:active:not(:has(.fav-btn:active)) {
+	transform: translateY(-2px) scale(0.98);
+}
+
+
 
 .recipe-info img {
 	width: 250px;
@@ -2481,12 +2497,6 @@ body {
 	object-fit: cover;
 }
 
-.ingredients-box {
-	background: #f9d291;
-	padding: 30px;
-	border-radius: 35px;
-	min-width: 450px;
-}
 
 .profile-container {
 	max-width: 800px;
