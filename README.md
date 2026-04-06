@@ -9,3 +9,8 @@ Repository for the Android Cookit app.
 
 ## Static Version
 **Link del video:** https://youtu.be/6BvDKYMWYiY
+
+## Functional Integration
+**Link del video:** https://youtu.be/eR19b0QyV54
+
+
