@@ -162,7 +162,7 @@ fun AiChefNavigation() {
 
             ProfileScreen(
                 onNavigateBack = {
-                    navController.popBackStack()
+                    navController.navigate(NavRoutes.HOME)
                 },
                 onLogout = {
 

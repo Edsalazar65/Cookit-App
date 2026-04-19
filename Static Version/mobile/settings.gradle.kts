@@ -25,5 +25,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AIChef"
+rootProject.name = "CookitApp"
 include(":app")
