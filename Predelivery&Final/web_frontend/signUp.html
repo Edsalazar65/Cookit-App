@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>CookIt - Sign Up</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+  </head>
+
+  <header style="padding-top: 1%; padding-bottom: 0.5%; min-height: 50px; background-color: #fff3d4; color:#ff751f; text-align: center; font-size:80px; font-family: sans-serif; font-weight: bold;">
+    CookIt.
+  </header>
+
+  <body>
+    <div class="bg-img">
+      <div class="content">
+        <header style="font-size: 33px; font-weight: 600; margin: 0 0 35px 0; color: #ff751f; font-family: 'Poppins',sans-serif;">Create Account</header>
+        
+        <form id="signup-form">
+          <div class="field">
+            <span class="fa fa-user"></span>
+            <input type="text" class="transparent-input" required placeholder="Full Name" id="signup-name">
+          </div>
+          <hr style="height:2px; margin-top: 1px; color: black; background-color: black; border: none;">
+
+          <div class="field space">
+            <span class="fa fa-envelope"></span>
+            <input type="email" class="transparent-input" required placeholder="Email Address" id="signup-email">
+          </div>
+          <hr style="height:2px; margin-top: 1px; color: black; background-color: black; border: none;">
+
+          <div class="field space">
+            <span class="fa fa-lock"></span>
+            <input type="password" id="pass-key" class="pass-key" required placeholder="Password">
+            <span class="show">SHOW</span>
+          </div>
+          <hr style="height:2px; margin-top: 1px; color: black; background-color: black; border: none;">
+
+          <div class="field space">
+            <span class="fa fa-lock"></span>
+            <input type="password" id="confirm-pass" class="pass-key" required placeholder="Confirm Password">
+          </div>
+          <hr style="height:2px; margin-top: 1px; color: black; background-color: black; border: none;">
+
+          <div class="field space">
+            <input type="submit" value="SIGN UP">
+          </div>
+        </form>
+
+        <div class="links">
+          <div class="google" id="google-signup-btn">
+            <span>Sign up with Google</span>
+          </div>
+        </div>
+
+        <div class="signup">Already have an account?
+          <a href="login.html">Login Now</a>
+          <hr>
+          <p>Plantilla adaptada de: <a href="https://www.codingnepalweb.com/"> CodingNepal</a></p>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="assets/js/signup-handler.js" >
+      
+    </script>
+
+    <script>
+      const pass_field = document.querySelector('#pass-key');
+      const confirm_field = document.querySelector('#confirm-pass');
+      const showBtn = document.querySelector('.show');
+      
+      showBtn.addEventListener('click', function(){
+       if(pass_field.type === "password"){
+         pass_field.type = "text";
+         confirm_field.type = "text";
+         showBtn.textContent = "HIDE";
+         showBtn.style.color = "#3498db";
+       }else{
+         pass_field.type = "password";
+         confirm_field.type = "password";
+         showBtn.textContent = "SHOW";
+         showBtn.style.color = "#222";
+       }
+      });
+    </script>
+  </body>
+</html>
