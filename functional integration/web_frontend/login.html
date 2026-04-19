@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+  </head>
+
+  <header
+    style="
+      padding-top: 1%;
+      padding-bottom: 0.5%;
+      min-height: 50px;
+      background-color: #fff3d4;
+      color: #ff751f;
+      text-align: center;
+      font-size: 80px;
+      font-family: sans-serif;
+      vertical-align: bottom;
+    "
+  >
+    <b>CookIt.</b>
+  </header>
+  <body>
+    <div class="bg-img">
+      <div class="content">
+        <form id="login-form">
+          <div class="field">
+            <span class="fa fa-user"></span>
+            <input
+              type="email"
+              id="login-email"
+              class="transparent-input"
+              required
+              placeholder="Email"
+            />
+          </div>
+          <hr
+            style="
+              height: 2px;
+              margin-top: 1px;
+              color: black;
+              background-color: black;
+              border: none;
+            "
+          />
+          <div class="field space">
+            <span class="fa fa-lock"></span>
+            <input
+              type="password"
+              id="login-password"
+              class="pass-key"
+              required
+              placeholder="Password"
+            />
+            <span class="show">SHOW</span>
+          </div>
+          <hr
+            style="
+              height: 2px;
+              margin-top: 1px;
+              color: black;
+              background-color: black;
+              border: none;
+            "
+          />
+          <div class="field">
+            <input type="submit" value="LOGIN" />
+          </div>
+        </form>
+        <div class="field space">
+          <button type="button" class="google-btn" id="google-login-btn">
+            <img src="images/Google__G__logo.svg.png" alt="Google logo" />
+            Login with Google
+          </button>
+        </div>
+
+        <div class="signup">
+          Don't have account?
+          <a href="signUp.html">Signup Now</a>
+          <hr />
+          <p>
+            Plantilla obtenida de:
+            <a href="https://www.codingnepalweb.com/"> CodingNepal</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+
+    <script type="module" src="assets/js/login-handler.js"></script>
+    <script>
+      const pass_field = document.querySelector(".pass-key");
+      const showBtn = document.querySelector(".show");
+      showBtn.addEventListener("click", function () {
+        if (pass_field.type === "password") {
+          pass_field.type = "text";
+          showBtn.textContent = "HIDE";
+          showBtn.style.color = "#3498db";
+        } else {
+          pass_field.type = "password";
+          showBtn.textContent = "SHOW";
+          showBtn.style.color = "#222";
+        }
+      });
+    </script>
+  </body>
+</html>

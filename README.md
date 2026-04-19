@@ -8,4 +8,9 @@ Repository for the Android Cookit app.
 **Link del video:** https://youtu.be/VOQ8Oyv1wZQ
 
 ## Static Version
-**Link del video:** 
+**Link del video:** https://youtu.be/6BvDKYMWYiY
+
+## Functional Integration y Progress report
+**Link del video:** https://youtu.be/eR19b0QyV54
+
+
