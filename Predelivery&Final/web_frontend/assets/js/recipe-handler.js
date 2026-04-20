@@ -23,7 +23,21 @@ async function loadRecipe() {
 
     if (recipeSnap.exists()) {
       const recipe = recipeSnap.data();
+      const bodyRef = document.getElementById("recipe-body");
+      const stepsRef = document.getElementById("recipe-steps");
+
       document.getElementById("recipe-name-banner").textContent = recipe.name;
+      const image = `<img src="${recipe.imageURL}" alt="${recipe.name}" class='recipe-img' />`;
+      bodyRef.innerHTML += (image);
+      bodyRef.innerHTML += (`<text>Ingredientes: </text><br><br>${(recipe.ingredients || [])
+                              .map((ing) => `${ing}<br>`)
+                              .join("")}</text>`);
+
+      stepsRef.innerHTML += (`<text>Pasos:</text><br><br><br> <ul>${(recipe.steps || [])
+                              .map((step) => `<li>${step}<br></li>`)
+                              .join("")}<ul></text>`);
+
+
     }
   } catch (error) {
     console.error("Error al obtener la receta:", error);

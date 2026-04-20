@@ -2671,3 +2671,8 @@ body {
 .google-btn span {
 	pointer-events: none;
 }
+
+.recipe-img{
+	max-width:40%;
+	height: auto;
+}

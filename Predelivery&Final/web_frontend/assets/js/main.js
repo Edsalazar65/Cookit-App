@@ -104,7 +104,7 @@ async function loadPublicRecipes() {
       const recipeCard = `
                 <article data-id="${recipeId}" class="recipe-card">
                     <div class="recipe-info">
-                        <img src="images/comida1.png" alt="${recipe.name}" />
+                        <img src="${recipe.imageURL}" alt="${recipe.name} class='cardImage'" />
                         <span class="recipe-title">${recipe.name}</span>
                         
                     </div>
@@ -165,7 +165,7 @@ export async function loadFavorites() {
           const recipeCard = `
                 <article data-id="${recipeID}" class="recipe-card">
                     <div class="recipe-info">
-                        <img src="images/comida1.png" alt="${recipe.name}" />
+                        <img src="${recipe.imageURL}" alt="${recipe.name} class='cardImage'" />
                         <span class="recipe-title">${recipe.name}</span>                  
                     </div>
                     <div class="ingredients-box">
@@ -205,7 +205,7 @@ export async function loadFavorites() {
   }
 }
 
-// 2. Función para guardar en el array 'favorites' del usuario
+//  Función para guardar en el array favorites del usuario
 async function addToFavorites(recipeId) {
   const user = auth.currentUser;
   if (!user) {
@@ -216,7 +216,7 @@ async function addToFavorites(recipeId) {
   try {
     const userRef = doc(db, "users", user.uid);
     await updateDoc(userRef, {
-      favorites: arrayUnion(recipeId), // Guarda el ID de la receta
+      favorites: arrayUnion(recipeId), 
     });
     alert("¡Receta añadida a tus favoritos! ⭐");
   } catch (error) {
