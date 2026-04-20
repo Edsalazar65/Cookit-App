@@ -14,4 +14,4 @@
 -keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
 
 # Keep data classes for Firestore serialization
--keep class com.curso.android.module5.aichef.domain.model.** { *; }
+-keep class com.kos.android.proyecto.cookit.domain.model.** { *; }

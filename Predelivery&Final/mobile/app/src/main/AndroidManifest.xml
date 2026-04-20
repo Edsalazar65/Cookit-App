@@ -1,18 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-=============================================================================
-AI CHEF - MÓDULO 5: FIREBASE AI LOGIC
-AndroidManifest.xml
-=============================================================================
-Configuración de la aplicación.
 
-IMPORTANTE SOBRE SEGURIDAD:
-- NO hay API Keys hardcodeadas en este proyecto
-- Firebase AI Logic maneja la autenticación con los servidores de Google
-- La seguridad adicional se configura con Firebase App Check
-- Las credenciales de Firebase vienen del archivo google-services.json
-=============================================================================
--->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Permiso de Internet requerido para Firebase -->

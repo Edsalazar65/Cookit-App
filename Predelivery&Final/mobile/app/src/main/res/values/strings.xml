@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AI Chef</string>
+    <string name="app_name">Cookit</string>
 
     <!-- Auth Screen -->
-    <string name="auth_title">AI Chef</string>
+    <string name="auth_title">Cookit</string>
     <string name="auth_subtitle">Tu asistente de cocina con IA</string>
     <string name="email_label">Correo electrónico</string>
     <string name="password_label">Contraseña</string>

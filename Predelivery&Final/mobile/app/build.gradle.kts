@@ -1,10 +1,4 @@
-// =============================================================================
-// AI CHEF - MÓDULO 5: FIREBASE AI LOGIC
-// Build Configuration (App Module)
-// =============================================================================
-// Este archivo configura el módulo principal incluyendo todas las
-// dependencias de Firebase necesarias para Auth, Firestore y AI Logic.
-// =============================================================================
+
 
 plugins {
     alias(libs.plugins.android.application)
@@ -21,11 +15,11 @@ plugins {
 }
 
 android {
-    namespace = "com.curso.android.module5.aichef"
+    namespace = "com.kos.android.proyecto.cookit"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.curso.android.module5.aichef"
+        applicationId = "com.kos.cookit"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
@@ -69,106 +63,47 @@ android {
 }
 
 dependencies {
-    // =========================================================================
-    // CORE ANDROID
-    // =========================================================================
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
-    // =========================================================================
-    // JETPACK COMPOSE
-    // =========================================================================
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.bundles.compose)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    // =========================================================================
-    // NAVIGATION
-    // =========================================================================
     implementation(libs.androidx.navigation.compose)
 
-    // =========================================================================
-    // LIFECYCLE (incluye collectAsStateWithLifecycle)
-    // =========================================================================
     implementation(libs.bundles.lifecycle)
 
-    // =========================================================================
-    // FIREBASE
-    // =========================================================================
-    // BoM (Bill of Materials) - SIEMPRE usar platform() para el BoM
-    // Esto asegura que todas las librerías de Firebase sean compatibles
+
     implementation(platform(libs.firebase.bom))
 
-    // Firebase Auth - Para login/registro de usuarios
     implementation(libs.firebase.auth)
 
-    // Cloud Firestore - Base de datos NoSQL
     implementation(libs.firebase.firestore)
 
-    // Firebase Storage - Almacenamiento de archivos (cache de imágenes generadas)
+
     implementation(libs.firebase.storage)
 
-    // ==========================================================================
-    // FIREBASE AI LOGIC - EL NUEVO SDK UNIFICADO (2025)
-    // ==========================================================================
-    // Este es el SDK CORRECTO para acceder a modelos Gemini desde apps móviles.
-    //
-    // HISTORIA:
-    // - 2024: Se lanzó "Vertex AI in Firebase" (firebase-vertexai)
-    // - 2025: Renombrado a "Firebase AI Logic" (firebase-ai)
-    //
-    // VENTAJAS DE FIREBASE AI vs SDK CLIENTE DIRECTO:
-    // 1. Seguridad: No necesitas API Keys en el código
-    // 2. App Check: Protección contra uso no autorizado
-    // 3. Integración: Funciona con Firebase Auth y reglas de seguridad
-    // 4. Billing: Se maneja a través de Firebase/GCP
-    //
-    // NO USAR:
-    // - com.google.firebase:firebase-vertexai (legacy)
-    // - com.google.ai.client.generativeai (cliente directo, deprecado)
-    // ==========================================================================
     implementation(libs.firebase.ai)
 
-    // Firebase App Check - Debug provider para desarrollo
+
     debugImplementation(libs.firebase.appcheck.debug)
 
-    // =========================================================================
-    // COIL - Carga de imágenes
-    // =========================================================================
     implementation(libs.coil.compose)
 
-    // =========================================================================
-    // COROUTINES
-    // =========================================================================
+
     implementation(libs.kotlinx.coroutines.android)
 
-    // =========================================================================
-    // HILT - Inyección de Dependencias
-    // =========================================================================
-    // CONCEPTO: Hilt usa anotaciones para configurar DI:
-    // - @HiltAndroidApp: En la clase Application
-    // - @AndroidEntryPoint: En Activities/Fragments
-    // - @HiltViewModel: En ViewModels
-    // - @Inject constructor: Para recibir dependencias
-    // - @Module + @Binds: Para proveer interfaces
-    //
-    // El compilador (kapt) genera el código necesario en compile-time.
-    // =========================================================================
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.navigation.compose)
 
-    // =========================================================================
-    // SERIALIZATION - Para JSON parsing
-    // =========================================================================
     implementation(libs.kotlinx.serialization.json)
 
-    // =========================================================================
-    // TESTING
-    // =========================================================================
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -186,7 +121,3 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
 }
 
-// Configuración de KAPT para Hilt (ELIMINADO por MIGRACIÓN A KSP)
-// kapt {
-//    correctErrorTypes = true
-// }
