@@ -25,17 +25,28 @@ async function loadRecipe() {
       const recipe = recipeSnap.data();
       const bodyRef = document.getElementById("recipe-body");
       const stepsRef = document.getElementById("recipe-steps");
+      const diffRef = document.getElementById("difficulty-body");
+
 
       document.getElementById("recipe-name-banner").textContent = recipe.name;
-      const image = `<img src="${recipe.imageURL}" alt="${recipe.name}" class='recipe-img' />`;
-      bodyRef.innerHTML += (image);
-      bodyRef.innerHTML += (`<text>Ingredientes: </text><br><br>${(recipe.ingredients || [])
-                              .map((ing) => `${ing}<br>`)
-                              .join("")}</text>`);
+      const image = document.createElement("img");
+    // `<img src="${recipe.imageURL}" alt="${recipe.name}" class='recipe-img' />`
+      image.src= recipe.imageURL;
+      image.className = "recipe-img";
+      bodyRef.prepend(image);
+      bodyRef.innerHTML += (`<p> <ul>${(recipe.ingredients || [])
+                              .map((ing) => `<li>${ing}<br></li>`)
+                              .join("")}</ul></p>`);
 
-      stepsRef.innerHTML += (`<text>Pasos:</text><br><br><br> <ul>${(recipe.steps || [])
+      const diff = document.createElement("p");
+      diff.textContent =recipe.difficulty;
+      diff.style= "padding-top:0px";
+      diffRef.append(diff);
+      
+
+      stepsRef.innerHTML += (` <ol style=" margin-left: 20px;">${(recipe.steps || [])
                               .map((step) => `<li>${step}<br></li>`)
-                              .join("")}<ul></text>`);
+                              .join("")}</ol>`);
 
 
     }

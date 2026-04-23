@@ -2675,4 +2675,6 @@ body {
 .recipe-img{
 	max-width:40%;
 	height: auto;
+	padding:40px;
+	
 }
