@@ -24,6 +24,7 @@ async function loadRecipe() {
     if (recipeSnap.exists()) {
 
       const recipe = recipeSnap.data();
+      console.log(recipeSnap.data());
       const hero = document.getElementById("recipe-hero");
       hero.style.backgroundImage = `url('${recipe.imageURL}')`;
 
