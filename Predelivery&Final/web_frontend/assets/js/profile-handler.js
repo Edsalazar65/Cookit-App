@@ -1,30 +1,133 @@
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { auth, db } from "./firebase-init.js";
-import {onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {signOut} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { auth, db, storage } from "./firebase-init.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getFirestore, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const nameDisplay= document.getElementById("profile-username");
-const logOutBtn=document.getElementById("logout-btn");
+const nameDisplay = document.getElementById("profile-username");
+const logOutBtn = document.getElementById("logout-btn");
 
-onAuthStateChanged(auth, async(user)=> {
-    if (user){
-        const userDoc= await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists() && userDoc.data().name){
-            nameDisplay.textContent= `Chef ${userDoc.data().name}`;
-        } else if(user.displayName){
-            nameDisplay.textContent=`Chef ${user.displayName}`;
-        } else{
-            nameDisplay.textContent=`Chef ${user.email.split("@")[0]}`;
+const editBadge = document.querySelector('.edit-badge');
+const avatarInput = document.getElementById('avatar-input');
+const cropModal = document.getElementById('crop-modal');
+const imageToCrop = document.getElementById('image-to-crop');
+const cancelCropBtn = document.getElementById('cancel-crop');
+const confirmCropBtn = document.getElementById('confirm-crop');
+const profileAvatar = document.querySelector('.profile-avatar');
+
+let cropper;
+
+editBadge.addEventListener('click', () => {
+    avatarInput.click();
+});
+
+avatarInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imageToCrop.src = e.target.result;
+            cropModal.style.display = 'flex';
+
+
+            if (cropper) {
+                cropper.destroy();
+            }
+
+
+            cropper = new Cropper(imageToCrop, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move'
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    avatarInput.value = '';
+});
+
+cancelCropBtn.addEventListener('click', () => {
+    cropModal.style.display = 'none';
+    if (cropper) cropper.destroy();
+});
+
+
+confirmCropBtn.addEventListener('click', async () => {
+    if (!cropper) return;
+
+    const originalText = confirmCropBtn.innerText;
+    confirmCropBtn.innerText = 'Subiendo...';
+    confirmCropBtn.disabled = true;
+
+
+    cropper.getCroppedCanvas({
+        width: 400,
+        height: 400
+    }).toBlob(async (blob) => {
+        try {
+            const user = auth.currentUser;
+            if (!user) throw new Error("No hay usuario autenticado");
+
+            const storageRef = ref(storage, `avatars/${user.uid}.jpg`);
+
+
+            await uploadBytes(storageRef, blob);
+
+
+            const downloadURL = await getDownloadURL(storageRef);
+
+            const userDocRef = doc(db, "users", user.uid);
+            await updateDoc(userDocRef, {
+                photoURL: downloadURL
+            });
+
+            profileAvatar.src = downloadURL;
+
+
+            cropModal.style.display = 'none';
+            cropper.destroy();
+
+        } catch (error) {
+            console.error("Error al subir la imagen: ", error);
+            alert("Hubo un error al subir la foto de perfil.");
+        } finally {
+            confirmCropBtn.innerText = originalText;
+            confirmCropBtn.disabled = false;
         }
-    } else{
-        window.location.href= "login.html";
+    }, 'image/jpeg', 0.8);
+});
+
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+
+            let rawName = userData.name || user.email.split("@")[0];
+            
+            const firstName = rawName.trim().split(" ")[0];
+            nameDisplay.textContent = `Chef ${firstName}`;
+
+
+            if (userData.photoURL != "") {
+                profileAvatar.src = userData.photoURL;
+            } else {
+                profileAvatar.src = "images/default-chef.png";
+            }
+        }
+    } else {
+        window.location.href = "login.html";
     }
 });
 
-logOutBtn.addEventListener("click", (e)=>{
+logOutBtn.addEventListener("click", (e) => {
     e.preventDefault();
-    signOut(auth).then(()=>{
-        window.location.href= "login.html";
+    signOut(auth).then(() => {
+        window.location.href = "login.html";
 
     });
 });

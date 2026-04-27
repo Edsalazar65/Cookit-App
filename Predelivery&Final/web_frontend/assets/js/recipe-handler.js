@@ -22,31 +22,29 @@ async function loadRecipe() {
     const recipeSnap = await getDoc(recipeRef);
 
     if (recipeSnap.exists()) {
-      const recipe = recipeSnap.data();
-      const bodyRef = document.getElementById("recipe-body");
-      const stepsRef = document.getElementById("recipe-steps");
-      const diffRef = document.getElementById("difficulty-body");
 
+      const recipe = recipeSnap.data();
+      const hero = document.getElementById("recipe-hero");
+      hero.style.backgroundImage = `url('${recipe.imageURL}')`;
 
       document.getElementById("recipe-name-banner").textContent = recipe.name;
-      const image = document.createElement("img");
-    // `<img src="${recipe.imageURL}" alt="${recipe.name}" class='recipe-img' />`
-      image.src= recipe.imageURL;
-      image.className = "recipe-img";
-      bodyRef.prepend(image);
-      bodyRef.innerHTML += (`<p> <ul>${(recipe.ingredients || [])
-                              .map((ing) => `<li>${ing}<br></li>`)
-                              .join("")}</ul></p>`);
+      const diffBadge = document.getElementById("difficulty-badge");
+      diffBadge.textContent = recipe.difficulty || "Normal";
 
-      const diff = document.createElement("p");
-      diff.textContent =recipe.difficulty;
-      diff.style= "padding-top:0px";
-      diffRef.append(diff);
+  
+
+      const bodyRef = document.getElementById("recipe-body");
+
+
+      bodyRef.innerHTML = `<ul>${(recipe.ingredients || [])
+        .map((ing) => `<li>${ing}</li>`)
+        .join("")}</ul>`;
+
       
-
-      stepsRef.innerHTML += (` <ol style=" margin-left: 20px;">${(recipe.steps || [])
-                              .map((step) => `<li>${step}<br></li>`)
-                              .join("")}</ol>`);
+      const stepsRef = document.getElementById("recipe-steps");
+      stepsRef.innerHTML = `<ol>${(recipe.steps || [])
+        .map((step) => `<li style="margin-bottom: 15px;">${step}</li>`)
+        .join("")}</ol>`;
 
 
     }

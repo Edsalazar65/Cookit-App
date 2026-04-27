@@ -32,7 +32,8 @@ signupForm.addEventListener("submit", async (e) => {
       email: email,
       inventory: [],
       myRecipes: [],
-      favorites: []
+      favorites: [],
+      photoURL: ""
     });
     window.location.href = "index.html";
   } catch (error) {

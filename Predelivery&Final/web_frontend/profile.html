@@ -1,77 +1,92 @@
 <!DOCTYPE HTML>
 <html>
-	<head>
-		<title>Cookit-App - Profile</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-		<link rel="icon" href="images/icon.png">
-		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-	</head>
-	<body class="homepage is-preload">
-		<div id="page-wrapper">
 
-			<div id="header" class="floating-nav">
-				<a href="index.html"><button class="button1">HOME</button></a>
-				<a href="favorites.html"><button class="button2">FAVORITES</button></a>
-				<a href="profile.html"><button class="button3">PROFILE</button></a>
-			</div>
+<head>
+	<title>Cookit-App - Profile</title>
+	<meta charset="utf-8" />
 
-			<div class="wrapper style2">
-				<div class="container">
-					
-					<div class="profile-container">
-						<div class="profile-header">
-							<div class="avatar-wrapper">
-								<img src="images/comida3.png" alt="User Avatar" class="profile-avatar" />
-								<div class="edit-badge">✎</div>
-							</div>
-							<h2 id="profile-username"></h2>
-							<p>"Cooking is love made visible"</p>
+	<link rel="stylesheet" href="assets/css/main.css" />
+	<link rel="icon" href="images/icon.png">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+</head>
+
+<body class="homepage is-preload">
+	<div id="page-wrapper">
+
+		<div id="header" class="floating-nav">
+			<a href="index.html"><button class="button1">HOME</button></a>
+			<a href="favorites.html"><button class="button2">FAVORITES</button></a>
+			<a href="profile.html"><button class="button3">PROFILE</button></a>
+		</div>
+
+		<div class="wrapper style2">
+			<div class="container">
+
+				<div class="profile-container">
+					<div class="profile-header">
+						<div class="avatar-wrapper">
+							<img src="" alt="User Avatar" class="profile-avatar" />
+							<div class="edit-badge">✎</div>
 						</div>
+						<h2 id="profile-username"></h2>
+						<p>"Cooking is love made visible"</p>
+					</div>
 
-						<div class="row">
-							<div class="col-6 col-12-mobile">
-								<div class="profile-card stats-card">
-									<h3>My Stats</h3>
-									<div class="stats-grid">
-										<div class="stat-item">
-											<span class="stat-value">12</span>
-											<span class="stat-label">Favorites</span>
-										</div>
-										<div class="stat-item">
-											<span class="stat-value">5</span>
-											<span class="stat-label">Friends</span>
-										</div>
+					<div class="row">
+						<div class="col-6 col-12-mobile">
+							<div class="profile-card stats-card">
+								<h3>My Stats</h3>
+								<div class="stats-grid">
+									<div class="stat-item">
+										<span class="stat-value">12</span>
+										<span class="stat-label">Favorites</span>
+									</div>
+									<div class="stat-item">
+										<span class="stat-value">5</span>
+										<span class="stat-label">Friends</span>
 									</div>
 								</div>
 							</div>
-
-							<div class="col-6 col-12-mobile">
-								<div class="profile-card settings-card">
-									<h3>Settings</h3>
-									<ul class="settings-list">
-										<li>Notifications <span>ON</span></li>
-										<li>Account Privacy <span>Public</span></li>
-										<li>Language <span>ES</span></li>
-									</ul>
-								</div>
-							</div>
 						</div>
 
-						<div class="profile-actions">
-							<a href="login.html" id="logout-btn"><button class="button logout-btn">LOG OUT</button></a>
+						<div class="col-6 col-12-mobile">
+							<div class="profile-card settings-card">
+								<h3>Settings</h3>
+								<ul class="settings-list">
+									<li>Notifications <span>ON</span></li>
+									<li>Account Privacy <span>Public</span></li>
+									<li>Language <span>ES</span></li>
+								</ul>
+							</div>
 						</div>
 					</div>
 
+					<div class="profile-actions">
+						<a href="login.html" id="logout-btn"><button class="button logout-btn">LOG OUT</button></a>
+					</div>
+				</div>
+
+			</div>
+		</div>
+		<input type="file" id="avatar-input" accept="image/*" style="display: none;" />
+
+		<div id="crop-modal" class="modal-overlay" style="display: none;">
+			<div class="crop-modal-content">
+				<h3>Ajustar foto de perfil</h3>
+				<div class="image-crop-container">
+					<img id="image-to-crop" src="" alt="Para recortar" />
+				</div>
+				<div class="modal-actions">
+					<button id="cancel-crop" class="button alt">Cancelar</button>
+					<button id="confirm-crop" class="button">Guardar Foto</button>
 				</div>
 			</div>
 		</div>
+	</div>
 
-		<script type="module" src="assets/js/profile-handler.js">
+	<script type="module" src="assets/js/profile-handler.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-		</script>
-
-	</body>
+</body>
 
 </html>

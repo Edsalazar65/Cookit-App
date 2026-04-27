@@ -10,6 +10,11 @@ import {
   arrayUnion,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+
+const $inventoryModal = $("#inventory-modal");
+const $inventoryList = $("#inventory-list");
+const $newIngInput = $("#new-ingredient");
+
 const $recipeList = $("#recipeList");
 const $favoriteList = $("#favorite-list");
 
@@ -34,6 +39,33 @@ $(document).ready(function () {
         "No hay usuario detectado. Remy no podrá ver el inventario.",
       );
     }
+
+
+  });
+
+  $("#open-inventory-btn").on("click", () => {
+    if (!auth.currentUser) {
+      alert("Inicia sesión para gestionar tu inventario 🐭");
+      return;
+    }
+    $inventoryModal.fadeIn(200);
+    renderInventory();
+  });
+
+  $("#close-inventory").on("click", () => $inventoryModal.fadeOut(200));
+
+
+
+  $("#add-ingredient-btn").on("click", async () => {
+    const item = $newIngInput.val().trim();
+    if (!item) return;
+
+    try {
+      const userRef = doc(db, "users", auth.currentUser.uid);
+      await updateDoc(userRef, { inventory: arrayUnion(item) });
+      $newIngInput.val("");
+      renderInventory();
+    } catch (e) { console.error(e); }
   });
 
   async function sendMessage() {
@@ -92,6 +124,43 @@ $(document).ready(function () {
   });
 });
 
+
+async function renderInventory() {
+  const userRef = doc(db, "users", auth.currentUser.uid);
+  const userDoc = await getDoc(userRef);
+
+  $inventoryList.empty();
+
+  if (userDoc.exists() && userDoc.data().inventory) {
+    const items = userDoc.data().inventory;
+
+    if (items.length === 0) {
+      $inventoryList.html("<p style='color:gray; font-size:0.8em;'>Tu despensa está vacía.</p>");
+      return;
+    }
+
+    items.forEach(item => {
+      const chip = $(`
+                <div class="ingredient-chip">
+                    <span>${item}</span>
+                    <span class="remove-chip" data-name="${item}">&times;</span>
+                </div>
+            `);
+      $inventoryList.append(chip);
+    });
+
+
+    $(".remove-chip").on("click", async function () {
+      const name = $(this).data("name");
+      const userRef = doc(db, "users", auth.currentUser.uid);
+      await updateDoc(userRef, { inventory: arrayRemove(name) });
+      renderInventory();
+    });
+  }
+}
+
+
+
 async function loadPublicRecipes() {
   try {
     const querySnapshot = await getDocs(collection(db, "public_recipes"));
@@ -112,9 +181,9 @@ async function loadPublicRecipes() {
                         <h3>Ingredientes</h3>
                         <ul>
                             ${(recipe.ingredients || [])
-                              .slice(0, 5)
-                              .map((ing) => `<li>${ing}</li>`)
-                              .join("")}
+          .slice(0, 5)
+          .map((ing) => `<li>${ing}</li>`)
+          .join("")}
                         </ul>
                         <button class="fav-btn add-fav-btn" data-id="${recipeId}" class="fav-btn">
                             Añadir a Favoritos ⭐
@@ -127,9 +196,9 @@ async function loadPublicRecipes() {
 
 
     //Asignar evento de click a los cards
-    $(".recipe-card").on("click", function (){
+    $(".recipe-card").on("click", function () {
       const id = $(this).data("id");
-      window.location.href=`recipe.html?id=${id}`;
+      window.location.href = `recipe.html?id=${id}`;
 
     });
 
@@ -172,9 +241,9 @@ export async function loadFavorites() {
                         <h3>Ingredientes</h3>
                         <ul>
                             ${(recipe.ingredients || [])
-                              .slice(0, 5)
-                              .map((ing) => `<li>${ing}</li>`)
-                              .join("")}
+              .slice(0, 5)
+              .map((ing) => `<li>${ing}</li>`)
+              .join("")}
                         </ul>
                         <button class="fav-btn remove-fav-btn" data-id="${recipeID}" >
                             Eliminar de Favoritos ❌
@@ -188,9 +257,9 @@ export async function loadFavorites() {
     }
 
     //Asignar evento de click a los cards
-    $(".recipe-card").on("click", function (){
+    $(".recipe-card").on("click", function () {
       const id = $(this).data("id");
-      window.location.href=`recipe.html?id=${id}`;
+      window.location.href = `recipe.html?id=${id}`;
 
     });
 
@@ -216,7 +285,7 @@ async function addToFavorites(recipeId) {
   try {
     const userRef = doc(db, "users", user.uid);
     await updateDoc(userRef, {
-      favorites: arrayUnion(recipeId), 
+      favorites: arrayUnion(recipeId),
     });
     alert("¡Receta añadida a tus favoritos! ⭐");
   } catch (error) {
