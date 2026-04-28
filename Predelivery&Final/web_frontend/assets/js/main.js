@@ -26,7 +26,7 @@ $(document).ready(function () {
   const $messagesContainer = $("#messages");
   let currentUserId = null;
 
-  loadPublicRecipes();
+
 
 
 
@@ -35,11 +35,15 @@ $(document).ready(function () {
     if (user) {
       currentUserId = user.uid;
       console.log("Welcome, Chef! ID:", currentUserId);
+      if (window.location.pathname.includes("index.html") || window.location.pathname === "/") {
+        loadMyRecipes();
+      } else {
+        loadPublicRecipes();
+      }
     } else {
       currentUserId = null;
-      console.warn(
-        "No hay usuario detectado. Remy no podrá ver el inventario.",
-      );
+      console.warn("No hay usuario detectado. Remy no podrá ver el inventario.");
+      loadPublicRecipes();
     }
 
 
@@ -77,7 +81,7 @@ $(document).ready(function () {
     $sendBtn.prop("disabled", true);
     $userInput.val("");
 
-    // 1. Mostrar mensaje del usuario
+    
     $messagesContainer.append(`
         <div class="user-message" style="margin-bottom: 15px; text-align: right;">
             <strong style="color: #ed7d31;">Tú:</strong> 
@@ -109,9 +113,12 @@ $(document).ready(function () {
             "name": "Baos de carne",
             "ingredients": ["Pan bao", "Mayonesa", "Pepino", "Zanahoria", "Cebolla roja", "Carne de cerdo picada", "Mani", "Salsa de soya", "Sriracha"],
             "steps": ["Corta los vegetales", "En un bowl, agrega el pepino, la zanahoria, la cebolla, el vinagre de vino tinto y la sal para encurtir.", "En un bol pequeño, mezcla la mayonesa y la sriracha. Con la base de un cazo, aplasta los cacahuetes en su propia bolsa para picarlos. Añade la mitad de los cacahuetes picados al bol con las verduras encurtidas.", "En una sartén, calienta un chorrito de aceite a fuego medio-alto. Agrega la carne picada de cerdo, salpimienta y cocina 4-5 min, desmenuzando con una espátula, hasta que se dore. Agrega la salsa de soja dulce y un chorrito de agua y cocina 1-2 min más, hasta que reduzca y la carne quede melosa.", "Coloca los panes bao en un plato, sin que se toquen entre ellos, y calienta en el microondas entre 40 y 60 segundos a máxima potencia, hasta que queden tiernos y esponjosos.", "En el interior de cada pan bao, agrega carne picada, zanahoria rallada y cebolla encurtida al gusto. Añade encima mayonesa de sriracha y cacahuetes picados. Sirve los encurtidos restantes a un lado como acompañamiento."],
-            "difficulty": "Fácil",
+            "difficulty": "Baja",
             "imagePrompt": "Un prompt detallado y fotorrealista para generar una imagen de esta receta. Ejemplo: 'A close-up photograph of steamed bao buns filled with glazed minced pork, pickled cucumber, and carrots, topped with chopped peanuts and sriracha mayo, served on a ceramic plate, cinematic lighting'."
         }
+
+        Puedes añadir ingredientes o no incluir algunos del inventario segun sea necesario para la receta
+        La dificultad puede ser Alta, Media o Baja
         
         Si el usuario te hace una pregunta normal (no pide crear receta), responde como un chef amigable en texto normal.
         `;
@@ -121,7 +128,7 @@ $(document).ready(function () {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: enrichedPrompt, // Enviamos el prompt enriquecido
+          prompt: enrichedPrompt, 
           userId: currentUserId,
         }),
       });
@@ -209,54 +216,163 @@ async function renderInventory() {
 
 async function loadPublicRecipes() {
   try {
+    let userFavorites = [];
+    let userSavedRecipes = [];
+
+    if (auth.currentUser) {
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (userDoc.exists()) {
+        userFavorites = userDoc.data().favorites || [];
+        userSavedRecipes = userDoc.data().myRecipes || [];
+      }
+    }
+
     const querySnapshot = await getDocs(collection(db, "public_recipes"));
     $recipeList.empty();
 
-    querySnapshot.forEach((doc) => {
-      const recipe = doc.data();
-      const recipeId = doc.id;
+    querySnapshot.forEach((docSnap) => {
+      const recipeId = docSnap.id;
+      const isFav = userFavorites.includes(recipeId);
+      const isSaved = userSavedRecipes.includes(recipeId);
 
-      const recipeCard = `
-                <article data-id="${recipeId}" class="recipe-card">
-                    <div class="recipe-info">
-                        <img src="${recipe.imageURL}" alt="${recipe.name} class='cardImage'" />
-                        <span class="recipe-title">${recipe.name}</span>
-                        
-                    </div>
-                    <div class="ingredients-box">
-                        <h3>Ingredientes</h3>
-                        <ul>
-                            ${(recipe.ingredients || [])
-          .slice(0, 5)
-          .map((ing) => `<li>${ing}</li>`)
-          .join("")}
-                        </ul>
-                        <button class="fav-btn add-fav-btn" data-id="${recipeId}" class="fav-btn">
-                            Añadir a Favoritos ⭐
-                        </button>
-                    </div>
-                </article>
-            `;
-      $recipeList.append(recipeCard);
+  
+      const html = getRecipeCardHTML(recipeId, docSnap.data(), isFav, isSaved);
+      $recipeList.append(html);
     });
 
-
-    //Asignar evento de click a los cards
-    $(".recipe-card").on("click", function () {
-      const id = $(this).data("id");
-      window.location.href = `recipe.html?id=${id}`;
-
-    });
-
-    // Asignar evento a los botones de favoritos recién creados
-    $(".add-fav-btn").on("click", function (event) {
-      event.stopPropagation();
-      const id = $(this).data("id");
-      addToFavorites(id);
-    });
+    assignCardEvents();
   } catch (error) {
     console.error("Error al cargar recetas:", error);
   }
+}
+
+async function toggleFavorite(recipeId, isCurrentlyFav, $btn) {
+  const user = auth.currentUser;
+  if (!user) return alert("Inicia sesión.");
+
+  const userRef = doc(db, "users", user.uid);
+  try {
+    if (isCurrentlyFav) {
+      await updateDoc(userRef, { favorites: arrayRemove(recipeId) });
+      $btn.removeClass("active").html('<i class="fa-regular fa-star"></i> Añadir');
+    } else {
+      await updateDoc(userRef, { favorites: arrayUnion(recipeId) });
+      $btn.addClass("active").html('<i class="fa-solid fa-star"></i> Favorito');
+    }
+  } catch (e) { console.error(e); }
+}
+
+async function toggleSaveRecipe(recipeId, isCurrentlySaved, $btn) {
+  const user = auth.currentUser;
+  if (!user) return alert("Inicia sesión.");
+
+  const userRef = doc(db, "users", user.uid);
+  try {
+    if (isCurrentlySaved) {
+      await updateDoc(userRef, { myRecipes: arrayRemove(recipeId) });
+      $btn.removeClass("active").html('<i class="fa-regular fa-bookmark"></i> Guardar');
+    } else {
+      await updateDoc(userRef, { myRecipes: arrayUnion(recipeId) });
+      $btn.addClass("active").html('<i class="fa-solid fa-bookmark"></i> Guardada');
+    }
+  } catch (e) { console.error(e); }
+}
+
+
+function getRecipeCardHTML(recipeId, recipe, isFav, isSaved) {
+
+  const favIcon = isFav ? 'fa-solid' : 'fa-regular';
+  const saveIcon = isSaved ? 'fa-solid' : 'fa-regular';
+  const difficultyClass = (recipe.difficulty || 'Baja').toLowerCase();
+  
+  return `
+        <article data-id="${recipeId}" class="recipe-card">
+            <div class="recipe-info">
+                <img src="${recipe.imageURL || 'images/placeholder.jpg'}" alt="${recipe.name}" class="cardImage" />
+                
+                <span class="recipe-title">${recipe.name}</span>
+            </div>
+            <div class="ingredients-box">
+                <h3>Ingredientes</h3>
+                <ul>
+                    ${(recipe.ingredients || []).slice(0, 5).map((ing) => `<li>${ing}</li>`).join("")}
+                </ul>
+                <div class="card-actions" style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="toggle-fav-btn action-btn ${isFav ? 'active' : ''}" 
+                            data-id="${recipeId}" title="Favoritos">
+                        <i class="${favIcon} fa-star"></i>
+                        <span>${isFav ? 'Favorito' : 'Añadir'}</span>
+                    </button>
+                    <button class="toggle-save-btn action-btn ${isSaved ? 'active' : ''}" 
+                            data-id="${recipeId}" title="Guardar">
+                        <i class="${saveIcon} fa-bookmark"></i>
+                        <span>${isSaved ? 'Guardado' : 'Guardar'}</span>
+                    </button>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
+async function loadMyRecipes() {
+  const user = auth.currentUser;
+  const $emptyState = $("#empty-state");
+  const $recipeList = $("#recipeList");
+
+  if (!user) return;
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userRef);
+    const myRecipesIDs = userDoc.data().myRecipes || [];
+    const favoritesIDs = userDoc.data().favorites || [];
+
+    $recipeList.empty();
+
+    if (myRecipesIDs.length === 0) {
+      $emptyState.show();
+      return;
+    }
+
+    $emptyState.hide();
+
+    for (const id of myRecipesIDs) {
+      const recipeSnap = await getDoc(doc(db, "public_recipes", id));
+      if (recipeSnap.exists()) {
+        const isFav = favoritesIDs.includes(id);
+        const html = getRecipeCardHTML(id, recipeSnap.data(), isFav, true);
+        $recipeList.append(html);
+      }
+    }
+
+    assignCardEvents();
+  } catch (e) {
+    console.error("Error cargando mis recetas:", e);
+  }
+}
+
+
+function assignCardEvents() {
+  $(".recipe-card").off("click").on("click", function () {
+    const id = $(this).data("id");
+    window.location.href = `recipe.html?id=${id}`;
+  });
+
+  // Botón de Favoritos
+  $(".toggle-fav-btn").off("click").on("click", function (event) {
+    event.stopPropagation(); 
+    const id = $(this).data("id");
+    const isCurrentlyFav = $(this).hasClass("active");
+    toggleFavorite(id, isCurrentlyFav, $(this));
+  });
+
+  // Botón de Guardar
+  $(".toggle-save-btn").off("click").on("click", function (event) {
+    event.stopPropagation(); 
+    const id = $(this).data("id");
+    const isCurrentlySaved = $(this).hasClass("active");
+    toggleSaveRecipe(id, isCurrentlySaved, $(this));
+  });
 }
 
 export async function loadFavorites() {
@@ -264,59 +380,27 @@ export async function loadFavorites() {
     const user = auth.currentUser;
     if (!user) return;
 
-    const userRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userRef);
-
+    const userDoc = await getDoc(doc(db, "users", user.uid));
     if (userDoc.exists()) {
       const favoriteIDs = userDoc.data().favorites || [];
-      $favoriteList.empty();
+      const myRecipesIDs = userDoc.data().myRecipes || []; 
+      const $favoriteListContainer = $("#favorite-list"); 
 
-      for (const recipeID of favoriteIDs) {
-        const recipeRef = doc(db, "public_recipes", recipeID);
-        const recipeSnap = await getDoc(recipeRef);
+      $favoriteListContainer.empty();
+
+      for (const id of favoriteIDs) {
+        const recipeSnap = await getDoc(doc(db, "public_recipes", id));
         if (recipeSnap.exists()) {
-          const recipe = recipeSnap.data();
-
-          const recipeCard = `
-                <article data-id="${recipeID}" class="recipe-card">
-                    <div class="recipe-info">
-                        <img src="${recipe.imageURL}" alt="${recipe.name} class='cardImage'" />
-                        <span class="recipe-title">${recipe.name}</span>                  
-                    </div>
-                    <div class="ingredients-box">
-                        <h3>Ingredientes</h3>
-                        <ul>
-                            ${(recipe.ingredients || [])
-              .slice(0, 5)
-              .map((ing) => `<li>${ing}</li>`)
-              .join("")}
-                        </ul>
-                        <button class="fav-btn remove-fav-btn" data-id="${recipeID}" >
-                            Eliminar de Favoritos ❌
-                        </button>
-                    </div>
-                </article>
-            `;
-          $favoriteList.append(recipeCard);
+          const isSaved = myRecipesIDs.includes(id);
+        
+          const html = getRecipeCardHTML(id, recipeSnap.data(), true, isSaved);
+          $favoriteListContainer.append(html);
         }
       }
+      assignCardEvents();
     }
-
-    //Asignar evento de click a los cards
-    $(".recipe-card").on("click", function () {
-      const id = $(this).data("id");
-      window.location.href = `recipe.html?id=${id}`;
-
-    });
-
-    // Asignar evento de eliminar de favoritos
-    $(".remove-fav-btn").on("click", function (event) {
-      event.stopPropagation();
-      const id = $(this).data("id");
-      removeFromFavorites(id);
-    });
   } catch (error) {
-    console.error("Error al cargar recetas:", error);
+    console.error("Error al cargar favoritos:", error);
   }
 }
 
