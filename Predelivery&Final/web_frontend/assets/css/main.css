@@ -1551,7 +1551,7 @@ input[type="submit"],
 input[type="reset"],
 button,
 .button {
-	margin-left: 50px;
+	margin-left: 0px;
 	margin-right: 50px;
 	position: relative;
 	display: inline-block;
@@ -2298,7 +2298,7 @@ body.homepage #header h1 {
 	border: none;
 	padding: 10px 25px;
 	color: white;
-	margin-top: 50px;
+	
 }
 
 .recipe-card {

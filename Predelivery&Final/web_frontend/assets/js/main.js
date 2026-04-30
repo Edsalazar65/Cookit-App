@@ -24,10 +24,12 @@ $(document).ready(function () {
   const $userInput = $("#user-input");
   const $sendBtn = $("#send-btn");
   const $messagesContainer = $("#messages");
+  const savedchat = sessionStorage.getItem("remy_chat");
+  if (savedchat && window.location.pathname.includes("index.html")) {
+    $messagesContainer.html(savedchat);
+    $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
+  }
   let currentUserId = null;
-
-
-
 
 
 
@@ -81,7 +83,7 @@ $(document).ready(function () {
     $sendBtn.prop("disabled", true);
     $userInput.val("");
 
-    
+
     $messagesContainer.append(`
         <div class="user-message" style="margin-bottom: 15px; text-align: right;">
             <strong style="color: #ed7d31;">Tú:</strong> 
@@ -128,7 +130,7 @@ $(document).ready(function () {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: enrichedPrompt, 
+          prompt: enrichedPrompt,
           userId: currentUserId,
         }),
       });
@@ -160,6 +162,7 @@ $(document).ready(function () {
             </div>
         `);
       $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
+      sessionStorage.setItem("remy_chat", $messagesContainer.html());
 
     } catch (error) {
       $loading.remove();
@@ -235,7 +238,7 @@ async function loadPublicRecipes() {
       const isFav = userFavorites.includes(recipeId);
       const isSaved = userSavedRecipes.includes(recipeId);
 
-  
+
       const html = getRecipeCardHTML(recipeId, docSnap.data(), isFav, isSaved);
       $recipeList.append(html);
     });
@@ -259,6 +262,7 @@ async function toggleFavorite(recipeId, isCurrentlyFav, $btn) {
       await updateDoc(userRef, { favorites: arrayUnion(recipeId) });
       $btn.addClass("active").html('<i class="fa-solid fa-star"></i> Favorito');
     }
+    sessionStorage.removeItem(`favorites_${auth.currentUser.uid}`);
   } catch (e) { console.error(e); }
 }
 
@@ -275,6 +279,7 @@ async function toggleSaveRecipe(recipeId, isCurrentlySaved, $btn) {
       await updateDoc(userRef, { myRecipes: arrayUnion(recipeId) });
       $btn.addClass("active").html('<i class="fa-solid fa-bookmark"></i> Guardada');
     }
+    sessionStorage.removeItem(`myRecipes_${auth.currentUser.uid}`);
   } catch (e) { console.error(e); }
 }
 
@@ -284,7 +289,7 @@ function getRecipeCardHTML(recipeId, recipe, isFav, isSaved) {
   const favIcon = isFav ? 'fa-solid' : 'fa-regular';
   const saveIcon = isSaved ? 'fa-solid' : 'fa-regular';
   const difficultyClass = (recipe.difficulty || 'Baja').toLowerCase();
-  
+
   return `
         <article data-id="${recipeId}" class="recipe-card">
             <div class="recipe-info">
@@ -321,6 +326,12 @@ async function loadMyRecipes() {
 
   if (!user) return;
 
+  const cachedRecipes = sessionStorage.getItem(`myRecipes_${user.uid}`);
+  if (cachedRecipes) {
+    $recipeList.html(cachedRecipes);
+    assignCardEvents();
+    return;
+  };
   try {
     const userRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userRef);
@@ -345,6 +356,7 @@ async function loadMyRecipes() {
       }
     }
 
+    sessionStorage.setItem(`myRecipes_${user.uid}`, $recipeList.html());
     assignCardEvents();
   } catch (e) {
     console.error("Error cargando mis recetas:", e);
@@ -360,7 +372,7 @@ function assignCardEvents() {
 
   // Botón de Favoritos
   $(".toggle-fav-btn").off("click").on("click", function (event) {
-    event.stopPropagation(); 
+    event.stopPropagation();
     const id = $(this).data("id");
     const isCurrentlyFav = $(this).hasClass("active");
     toggleFavorite(id, isCurrentlyFav, $(this));
@@ -368,7 +380,7 @@ function assignCardEvents() {
 
   // Botón de Guardar
   $(".toggle-save-btn").off("click").on("click", function (event) {
-    event.stopPropagation(); 
+    event.stopPropagation();
     const id = $(this).data("id");
     const isCurrentlySaved = $(this).hasClass("active");
     toggleSaveRecipe(id, isCurrentlySaved, $(this));
@@ -380,11 +392,18 @@ export async function loadFavorites() {
     const user = auth.currentUser;
     if (!user) return;
 
+    const cachedRecipes = sessionStorage.getItem(`favorites_${user.uid}`);
+    if (cachedRecipes) {
+      $recipeList.html(cachedRecipes);
+      assignCardEvents();
+      return;
+    };
+
     const userDoc = await getDoc(doc(db, "users", user.uid));
     if (userDoc.exists()) {
       const favoriteIDs = userDoc.data().favorites || [];
-      const myRecipesIDs = userDoc.data().myRecipes || []; 
-      const $favoriteListContainer = $("#favorite-list"); 
+      const myRecipesIDs = userDoc.data().myRecipes || [];
+      const $favoriteListContainer = $("#favorite-list");
 
       $favoriteListContainer.empty();
 
@@ -392,11 +411,12 @@ export async function loadFavorites() {
         const recipeSnap = await getDoc(doc(db, "public_recipes", id));
         if (recipeSnap.exists()) {
           const isSaved = myRecipesIDs.includes(id);
-        
+
           const html = getRecipeCardHTML(id, recipeSnap.data(), true, isSaved);
           $favoriteListContainer.append(html);
         }
       }
+      sessionStorage.setItem(`favorites_${user.uid}`, $recipeList.html());
       assignCardEvents();
     }
   } catch (error) {
