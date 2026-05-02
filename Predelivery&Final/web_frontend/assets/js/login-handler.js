@@ -2,6 +2,7 @@ import { auth, db } from "./firebase-init.js";
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -37,7 +38,7 @@ googleBtn.addEventListener("click", async () => {
     const docSnap = await getDoc(userRef);
 
     if (!docSnap.exists()) {
-      // ¡Alerta de intruso! No tiene datos inicializados.
+      
       await signOut(auth); // Cerramos su sesión inmediatamente
       alert(
         "No encontramos tu cuenta. Por favor, ve a Sign Up para registrarte.",
@@ -46,6 +47,6 @@ googleBtn.addEventListener("click", async () => {
     }
     window.location.href = "index.html";
   } catch (error) {
-    console.error("Error Google Login:", error);
+    console.error("Error Google Login:", error.code, error);
   }
 });

@@ -293,7 +293,7 @@ function getRecipeCardHTML(recipeId, recipe, isFav, isSaved) {
   return `
         <article data-id="${recipeId}" class="recipe-card">
             <div class="recipe-info">
-                <img src="${recipe.imageURL || 'images/placeholder.jpg'}" alt="${recipe.name}" class="cardImage" />
+                <img src="${recipe.imageURL || 'images/placeholder.png'}" alt="${recipe.name}" class="cardImage" />
                 
                 <span class="recipe-title">${recipe.name}</span>
             </div>
@@ -331,14 +331,22 @@ async function loadMyRecipes() {
     $recipeList.html(cachedRecipes);
     assignCardEvents();
     return;
-  };
+  }
+
   try {
     const userRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userRef);
-    const myRecipesIDs = userDoc.data().myRecipes || [];
-    const favoritesIDs = userDoc.data().favorites || [];
 
     $recipeList.empty();
+
+    // Verificamos si el documento existe ANTES de intentar leer sus datos
+    if (!userDoc.exists()) {
+      $emptyState.show();
+      return;
+    }
+
+    const myRecipesIDs = userDoc.data().myRecipes || [];
+    const favoritesIDs = userDoc.data().favorites || [];
 
     if (myRecipesIDs.length === 0) {
       $emptyState.show();
