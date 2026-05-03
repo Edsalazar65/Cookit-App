@@ -120,6 +120,9 @@ class ChefViewModel @Inject constructor(
     private val _imageGenerationState = MutableStateFlow<UiState<String>>(UiState.Idle)
     val imageGenerationState: StateFlow<UiState<String>> = _imageGenerationState.asStateFlow()
 
+    private val _addRecipeState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
+    val addRecipeState: StateFlow<UiState<Unit>> = _addRecipeState.asStateFlow()
+
     private var imageGenerationJob: Job? = null
 
     init {
@@ -227,6 +230,65 @@ class ChefViewModel @Inject constructor(
     fun removeIngredient(ingredient: String) {
         val userId = authRepository.currentUserId ?: return
         viewModelScope.launch { userRepository.removeIngredient(userId, ingredient) }
+    }
+
+    fun saveManualRecipe(
+        name: String,
+        ingredients: List<String>,
+        steps: List<String>,
+        difficulty: String,
+        imageBitmap: Bitmap?
+    ) {
+        val userId = authRepository.currentUserId ?: return
+        viewModelScope.launch {
+            _addRecipeState.value = UiState.Loading("Saving recipe...")
+            try {
+                // 1. Create initial recipe object to get a Firestore ID
+                val initialRecipe = Recipe(
+                    name = name,
+                    ingredients = ingredients,
+                    steps = steps,
+                    difficulty = difficulty
+                )
+                
+                // 2. Save to public_recipes to get ID
+                val saveResult = firestoreRepository.saveRecipe(initialRecipe)
+                
+                saveResult.fold(
+                    onSuccess = { recipeId ->
+                        var finalImageUrl = ""
+                        
+                        // 3. Upload image if provided
+                        if (imageBitmap != null) {
+                            val uploadResult = storageRepository.uploadRecipeImage(recipeId, imageBitmap)
+                            if (uploadResult.isSuccess) {
+                                finalImageUrl = uploadResult.getOrThrow()
+                                // Update recipe with URL
+                                val updatedRecipe = initialRecipe.copy(id = recipeId, imageURL = finalImageUrl)
+                                firestoreRepository.saveRecipe(updatedRecipe)
+                            }
+                        } else {
+                             val updatedRecipe = initialRecipe.copy(id = recipeId)
+                             firestoreRepository.saveRecipe(updatedRecipe)
+                        }
+
+                        // 4. Add to user's myRecipes
+                        userRepository.addRecipeToMyRecipes(userId, recipeId)
+                        
+                        _addRecipeState.value = UiState.Success(Unit)
+                    },
+                    onFailure = { error ->
+                        _addRecipeState.value = UiState.Error(error.message ?: "Failed to save recipe")
+                    }
+                )
+            } catch (e: Exception) {
+                _addRecipeState.value = UiState.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun clearAddRecipeState() {
+        _addRecipeState.value = UiState.Idle
     }
 
     fun generateRecipeImage(recipeId: String, existingImageUrl: String, recipeTitle: String, ingredients: List<String>) {

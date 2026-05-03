@@ -33,7 +33,8 @@ fun ExploreScreen(
     // Agregamos funciones de navegación para la barra inferior
     onNavigateToHome: () -> Unit,
     onNavigateToFavorites: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToAddRecipe: () -> Unit
 ) {
     val recipes by viewModel.filteredPublicRecipes.collectAsStateWithLifecycle()
     val userData by viewModel.userData.collectAsStateWithLifecycle()
@@ -53,7 +54,8 @@ fun ExploreScreen(
                 onNavigateToHome = onNavigateToHome,
                 onNavigateToExplore = { },
                 onNavigateToFavorites = onNavigateToFavorites,
-                onNavigateToProfile = onNavigateToProfile
+                onNavigateToProfile = onNavigateToProfile,
+                onNavigateToAddRecipe = onNavigateToAddRecipe
             )
         }
     ) { paddingValues ->

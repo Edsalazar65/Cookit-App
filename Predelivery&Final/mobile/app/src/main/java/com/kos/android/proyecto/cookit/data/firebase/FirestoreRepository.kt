@@ -44,4 +44,19 @@ class FirestoreRepository @Inject constructor() : IFirestoreRepository {
             Result.failure(Exception("Error eliminando receta: ${e.message}"))
         }
     }
+
+    override suspend fun saveRecipe(recipe: Recipe): Result<String> {
+        return try {
+            val docRef = if (recipe.id.isNotEmpty()) {
+                publicRecipesCollection.document(recipe.id)
+            } else {
+                publicRecipesCollection.document()
+            }
+            val finalRecipe = if (recipe.id.isEmpty()) recipe.copy(id = docRef.id) else recipe
+            docRef.set(finalRecipe.toMap()).await()
+            Result.success(docRef.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

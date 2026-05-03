@@ -16,6 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.kos.android.proyecto.cookit.domain.model.AuthState
+import com.kos.android.proyecto.cookit.ui.screens.AddRecipeScreen
 import com.kos.android.proyecto.cookit.ui.screens.AuthScreen
 import com.kos.android.proyecto.cookit.ui.screens.ExploreScreen
 import com.kos.android.proyecto.cookit.ui.screens.FavoritesScreen
@@ -59,6 +60,7 @@ object NavRoutes {
     const val EXPLORE = "explore"
     const val FAVORITES = "favorites"
     const val GENERATOR = "generator"
+    const val ADD_RECIPE = "add_recipe"
     const val RECIPE_DETAIL = "recipe_detail/{recipeId}"
     const val PROFILE = "profile"
 
@@ -116,6 +118,9 @@ fun AiChefNavigation() {
                 onNavigateToExplore = {                         // <-- 2. AGREGAR ESTE BLOQUE
                     navController.navigate(NavRoutes.EXPLORE)
                 },
+                onNavigateToAddRecipe = {
+                    navController.navigate(NavRoutes.ADD_RECIPE)
+                },
                 onLogout = {
                     navController.navigate(NavRoutes.AUTH) {
                         popUpTo(NavRoutes.HOME) { inclusive = true }
@@ -141,6 +146,9 @@ fun AiChefNavigation() {
                 onNavigateToHome = {
                     navController.navigate(NavRoutes.HOME)
                 },
+                onNavigateToAddRecipe = {
+                    navController.navigate(NavRoutes.ADD_RECIPE)
+                },
                /*onLogout = {
                     navController.navigate(NavRoutes.AUTH) {
                         popUpTo(NavRoutes.HOME) { inclusive = true }
@@ -158,6 +166,9 @@ fun AiChefNavigation() {
                 },
                 onNavigateToExplore = {
                     navController.navigate(NavRoutes.EXPLORE)
+                },
+                onNavigateToAddRecipe = {
+                    navController.navigate(NavRoutes.ADD_RECIPE)
                 },
                 onNavigateToDetail = { recipeId ->
                     navController.navigate(NavRoutes.recipeDetail(recipeId))
@@ -180,6 +191,21 @@ fun AiChefNavigation() {
             )
         }
 
+        // Pantalla de añadir receta manual
+        composable(NavRoutes.ADD_RECIPE) {
+            AddRecipeScreen(
+                viewModel = viewModel,
+                onRecipeAdded = {
+                    navController.navigate(NavRoutes.HOME) {
+                        popUpTo(NavRoutes.HOME) { inclusive = true }
+                    }
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
         //Pantalla de perfil
         composable(NavRoutes.PROFILE) {
             ProfileScreen(
@@ -192,6 +218,9 @@ fun AiChefNavigation() {
                 },
                 onNavigateToFavorites = {
                     navController.navigate(NavRoutes.FAVORITES)
+                },
+                onNavigateToAddRecipe = {
+                    navController.navigate(NavRoutes.ADD_RECIPE)
                 },
                 onLogout = {
                     viewModel.signOut()

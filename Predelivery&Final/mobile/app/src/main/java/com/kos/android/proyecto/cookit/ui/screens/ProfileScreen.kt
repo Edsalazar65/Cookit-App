@@ -38,6 +38,7 @@ fun ProfileScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToExplore: () -> Unit,
     onNavigateToFavorites: () -> Unit,
+    onNavigateToAddRecipe: () -> Unit,
     onLogout: () -> Unit
 ) {
     val userData by viewModel.userData.collectAsStateWithLifecycle()
@@ -68,7 +69,8 @@ fun ProfileScreen(
                 onNavigateToHome = onNavigateToHome,
                 onNavigateToExplore = onNavigateToExplore,
                 onNavigateToFavorites = onNavigateToFavorites,
-                onNavigateToProfile = { }
+                onNavigateToProfile = { },
+                onNavigateToAddRecipe = onNavigateToAddRecipe
             )
         }
     ) { paddingValues ->

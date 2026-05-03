@@ -15,6 +15,8 @@ interface IUserRepository {
 
     suspend fun toggleSaveRecipe(userId: String, recipeId: String): Result<Unit>
 
+    suspend fun addRecipeToMyRecipes(userId: String, recipeId: String): Result<Unit>
+
     suspend fun updateProfilePicture(userId: String, photoURL: String): Result<Unit>
 
     suspend fun addIngredient(userId: String, ingredient: String): Result<Unit>

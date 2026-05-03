@@ -30,6 +30,7 @@ fun FavoritesScreen(
     onNavigateBack: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToExplore: () -> Unit,
+    onNavigateToAddRecipe: () -> Unit,
     onNavigateToDetail: (String) -> Unit
 ) {
     val favoriteRecipes by viewModel.favoriteRecipes.collectAsStateWithLifecycle()
@@ -43,7 +44,8 @@ fun FavoritesScreen(
                 onNavigateToHome = onNavigateBack,
                 onNavigateToExplore = onNavigateToExplore,
                 onNavigateToFavorites = { },
-                onNavigateToProfile = onNavigateToProfile
+                onNavigateToProfile = onNavigateToProfile,
+                onNavigateToAddRecipe = onNavigateToAddRecipe
             )
         }
     ) { paddingValues ->

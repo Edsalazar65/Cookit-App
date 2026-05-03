@@ -16,9 +16,9 @@ class StorageRepository @Inject constructor() : IStorageRepository {
 
     override suspend fun uploadRecipeImage(recipeId: String, bitmap: Bitmap): Result<String> {
         return try {
-            val imageRef = recipeImagesRef.child("$recipeId.jpg")
+            val imageRef = recipeImagesRef.child("$recipeId.png")
             val baos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)
             val imageData = baos.toByteArray()
             imageRef.putBytes(imageData).await()
             val downloadUrl = imageRef.downloadUrl.await().toString()
@@ -30,7 +30,7 @@ class StorageRepository @Inject constructor() : IStorageRepository {
 
     override suspend fun deleteRecipeImage(recipeId: String): Result<Unit> {
         return try {
-            val imageRef = recipeImagesRef.child("$recipeId.jpg")
+            val imageRef = recipeImagesRef.child("$recipeId.png")
             imageRef.delete().await()
             Result.success(Unit)
         } catch (e: Exception) {

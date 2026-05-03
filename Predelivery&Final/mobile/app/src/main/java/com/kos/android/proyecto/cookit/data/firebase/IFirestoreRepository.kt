@@ -7,5 +7,7 @@ interface IFirestoreRepository {
 
     fun observePublicRecipes(): Flow<List<Recipe>>
 
+    suspend fun saveRecipe(recipe: Recipe): Result<String>
+
     suspend fun deleteRecipe(recipeId: String): Result<Unit>
 }

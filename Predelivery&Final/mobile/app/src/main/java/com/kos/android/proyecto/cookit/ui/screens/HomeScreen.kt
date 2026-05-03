@@ -32,6 +32,7 @@ fun HomeScreen(
     viewModel: ChefViewModel,
     onNavigateToGenerator: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToAddRecipe: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToExplore: () -> Unit,
@@ -74,7 +75,8 @@ fun HomeScreen(
                 onNavigateToHome = { },
                 onNavigateToExplore = onNavigateToExplore,
                 onNavigateToFavorites = onNavigateToFavorites,
-                onNavigateToProfile = onNavigateToProfile
+                onNavigateToProfile = onNavigateToProfile,
+                onNavigateToAddRecipe = onNavigateToAddRecipe
             )
         },
 

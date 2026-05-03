@@ -86,6 +86,15 @@ class UserRepository @Inject constructor() : IUserRepository {
         }
     }
 
+    override suspend fun addRecipeToMyRecipes(userId: String, recipeId: String): Result<Unit> {
+        return try {
+            usersCollection.document(userId).update("myRecipes", FieldValue.arrayUnion(recipeId)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun updateProfilePicture(userId: String, photoURL: String): Result<Unit> {
         return try {
             usersCollection.document(userId).update("photoURL", photoURL).await()
