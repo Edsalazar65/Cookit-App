@@ -89,7 +89,7 @@ fun AuthScreen(
 
     fun startGoogleLogin() {
         val gso = com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("801437778194-ck3rtifpdh963fobrlqpbjf049tbf4qg.apps.googleusercontent.com")
+            .requestIdToken(context.getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
         val client = com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(context, gso)

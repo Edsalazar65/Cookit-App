@@ -19,7 +19,7 @@ import com.kos.android.proyecto.cookit.domain.model.AuthState
 import com.kos.android.proyecto.cookit.ui.screens.AuthScreen
 import com.kos.android.proyecto.cookit.ui.screens.ExploreScreen
 import com.kos.android.proyecto.cookit.ui.screens.FavoritesScreen
-import com.kos.android.proyecto.cookit.ui.screens.GeneratorScreen
+
 import com.kos.android.proyecto.cookit.ui.screens.HomeScreen
 import com.kos.android.proyecto.cookit.ui.screens.ProfileScreen
 import com.kos.android.proyecto.cookit.ui.screens.RecipeDetailScreen
@@ -166,17 +166,7 @@ fun AiChefNavigation() {
         }
 
         // Pantalla de generación de recetas con IA
-        composable(NavRoutes.GENERATOR) {
-            GeneratorScreen(
-                viewModel = viewModel,
-                onNavigateBack = {
-                    navController.navigate(NavRoutes.HOME)
-                },
-                onRecipeGenerated = {
-                    navController.popBackStack()
-                }
-            )
-        }
+
 
         // Pantalla de detalle de receta
         composable(NavRoutes.RECIPE_DETAIL) { backStackEntry ->

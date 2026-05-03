@@ -1,26 +1,25 @@
 package com.kos.android.proyecto.cookit.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.kos.android.proyecto.cookit.domain.model.Recipe
-import com.kos.android.proyecto.cookit.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeCard(
     recipe: Recipe,
@@ -31,72 +30,94 @@ fun RecipeCard(
     onSaveClick: (Recipe) -> Unit
 ) {
     Card(
+        onClick = { onRecipeClick(recipe.id) },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { onRecipeClick(recipe.id) },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
-            // Imagen de la receta
-            AsyncImage(
-                model = recipe.imageURL,
-                contentDescription = "Imagen de ${recipe.name}",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
-                contentScale = ContentScale.Crop,
-                placeholder = rememberVectorPainter(Icons.Default.Image),
-                error = rememberVectorPainter(Icons.Default.Warning)
-            )
+            Box {
+                // Imagen de la receta
+                AsyncImage(
+                    model = recipe.imageURL,
+                    contentDescription = recipe.name,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = rememberVectorPainter(Icons.Default.Image),
+                    error = rememberVectorPainter(Icons.Default.Warning)
+                )
+                
+                // Badge de dificultad en la imagen
+                Surface(
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .align(Alignment.TopEnd),
+                    color = Color.White.copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = recipe.difficulty.uppercase(),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF5D4037)
+                    )
+                }
+            }
 
             Column(modifier = Modifier.padding(16.dp)) {
-                // Título
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = recipe.name,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        ),
+                        color = Color(0xFF5D4037),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    Row {
+                        IconButton(onClick = { onFavoriteClick(recipe) }) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                                tint = if (isFavorite) Color(0xFFD32F2F) else Color.LightGray,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        IconButton(onClick = { onSaveClick(recipe) }) {
+                            Icon(
+                                imageVector = if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = null,
+                                tint = if (isSaved) Color(0xFF388E3C) else Color.LightGray,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Mostrar ingredientes principales como una sola línea
                 Text(
-                    text = recipe.name,
-                    style = MaterialTheme.typography.titleLarge,
+                    text = recipe.ingredients.take(3).joinToString(", "),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Mostrar hasta 5 ingredientes
-                Text(
-                    text = "Ingredientes principales:",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                val topIngredients = recipe.ingredients.take(5)
-                topIngredients.forEach { ingredient ->
-                    Text(
-                        text = "• $ingredient",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Botones de acción
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    IconButton(onClick = { onFavoriteClick(recipe) }) {
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = if (isFavorite) "Quitar de Favoritos" else "Agregar a Favoritos",
-                            tint = if (isFavorite) Color(0xFFD32F2F) else LocalContentColor.current
-                        )
-                    }
-                    IconButton(onClick = { onSaveClick(recipe) }) {
-                        Icon(
-                            imageVector = if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                            contentDescription = if (isSaved) "Quitar de Guardados" else "Guardar Receta",
-                            tint = if (isSaved) Color(0xFF388E3C) else LocalContentColor.current
-                        )
-                    }
-                }
             }
         }
     }

@@ -10,22 +10,14 @@ import com.kos.android.proyecto.cookit.data.remote.IAiLogicDataSource
 import com.kos.android.proyecto.cookit.domain.model.AuthState
 import com.kos.android.proyecto.cookit.domain.model.Recipe
 import com.kos.android.proyecto.cookit.domain.model.UiState
+import com.kos.android.proyecto.cookit.data.firebase.IUserRepository
+import com.kos.android.proyecto.cookit.domain.model.UserData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.kos.android.proyecto.cookit.data.firebase.IUserRepository
-import com.kos.android.proyecto.cookit.domain.model.UserData
-import kotlinx.coroutines.flow.combine
-
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -44,8 +36,20 @@ class ChefViewModel @Inject constructor(
             initialValue = AuthState.Loading
         )
 
+    private val _authUiState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
+    val authUiState: StateFlow<UiState<Unit>> = _authUiState.asStateFlow()
+
     private val _publicRecipes = MutableStateFlow<List<Recipe>>(emptyList())
     val publicRecipes: StateFlow<List<Recipe>> = _publicRecipes.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _exploreSearchQuery = MutableStateFlow("")
+    val exploreSearchQuery: StateFlow<String> = _exploreSearchQuery.asStateFlow()
+
+    private val _filterByInventory = MutableStateFlow(false)
+    val filterByInventory: StateFlow<Boolean> = _filterByInventory.asStateFlow()
 
     val userData: StateFlow<UserData?> = authState
         .flatMapLatest { state ->
@@ -72,139 +76,54 @@ class ChefViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    val recipes: StateFlow<List<Recipe>> = combine(
+    val filteredPublicRecipes: StateFlow<List<Recipe>> = combine(
         publicRecipes,
-        userData
-    ) { publicList, user ->
-        val myRecipeIds = user?.myRecipes ?: emptyList()
-        publicList.filter { it.id in myRecipeIds }
+        _exploreSearchQuery
+    ) { publicList, query ->
+        if (query.isBlank()) publicList
+        else publicList.filter { it.name.contains(query, ignoreCase = true) }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
-    init {
-        observePublicRecipes()
-    }
-
-    private val _authUiState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
-    val authUiState: StateFlow<UiState<Unit>> = _authUiState.asStateFlow()
+    val recipes: StateFlow<List<Recipe>> = combine(
+        publicRecipes,
+        userData,
+        _searchQuery,
+        _filterByInventory
+    ) { publicList, user, query, onlyInventory ->
+        val myRecipeIds = user?.myRecipes ?: emptyList()
+        val inventory = user?.inventory ?: emptyList()
+        
+        publicList.filter { recipe ->
+            val matchesId = recipe.id in myRecipeIds
+            val matchesQuery = recipe.name.contains(query, ignoreCase = true)
+            val matchesInventory = if (onlyInventory) {
+                recipe.ingredients.any { ingredient -> 
+                    inventory.any { it.contains(ingredient, ignoreCase = true) } 
+                }
+            } else true
+            
+            matchesId && matchesQuery && matchesInventory
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     private val _generationState = MutableStateFlow<UiState<Recipe>>(UiState.Idle)
     val generationState: StateFlow<UiState<Recipe>> = _generationState.asStateFlow()
-
 
     private val _imageGenerationState = MutableStateFlow<UiState<String>>(UiState.Idle)
     val imageGenerationState: StateFlow<UiState<String>> = _imageGenerationState.asStateFlow()
 
     private var imageGenerationJob: Job? = null
 
-    //Autenticacion
-
-    /**
-     * Inicia sesión con email y password
-     */
-    fun signIn(email: String, password: String) {
-        viewModelScope.launch {
-            _authUiState.value = UiState.Loading("Iniciando sesión...")
-
-            val result = authRepository.signIn(email, password)
-
-            result.fold(
-                onSuccess = { _authUiState.value = UiState.Success(Unit) },
-                onFailure = { error -> _authUiState.value = UiState.Error(error.message ?: "Error desconocido") }
-            )
-        }
-    }
-    fun signInWithGoogle(idToken: String) {
-        viewModelScope.launch {
-            _authUiState.value = UiState.Loading("Conectando con Google...")
-
-            val result = authRepository.signInWithGoogle(idToken)
-
-            result.fold(
-                onSuccess = { userId ->
-
-                    val existingData = userRepository.getUserData(userId)
-
-                    if (existingData == null) {
-
-                        val newUserData = UserData(
-                            email = "email_obtenido_de_google@ejemplo.com",
-                            name = "Usuario de Google"
-                        )
-                        val firestoreResult = userRepository.createUserDocument(userId, newUserData)
-
-                        firestoreResult.fold(
-                            onSuccess = { _authUiState.value = UiState.Success(Unit) },
-                            onFailure = { error ->
-                                _authUiState.value = UiState.Error(
-                                    "Autenticado pero no se pudo crear el perfil: ${error.message}"
-                                )
-                            }
-                        )
-                    } else {
-
-                        _authUiState.value = UiState.Success(Unit)
-                    }
-                },
-                onFailure = { error ->
-                    _authUiState.value = UiState.Error(error.message ?: "Error de Google")
-                }
-            )
-        }
-    }
-
-    /**
-     * Registra un nuevo usuario
-     */
-    fun signUp(name : String,email: String, password: String) {
-        viewModelScope.launch {
-            _authUiState.value = UiState.Loading("Creando cuenta...")
-
-            val authResult = authRepository.signUp(email, password)
-
-            authResult.fold(
-                onSuccess = { userId ->
-                    val newUserData = UserData(
-                        email = email,
-                        name = name
-                    )
-
-                    val firestoreResult = userRepository.createUserDocument(userId, newUserData)
-
-                    firestoreResult.fold(
-                        onSuccess = {
-                            _authUiState.value = UiState.Success(Unit)
-                        },
-                        onFailure = { error ->
-                            _authUiState.value = UiState.Error(
-                                "Usuario creado pero falló la base de datos: ${error.message}"
-                            )
-                        }
-                    )
-                },
-                onFailure = { error ->
-                    _authUiState.value = UiState.Error(error.message ?: "Error de registro")
-                }
-            )
-        }
-    }
-
-    /**
-     * Cierra la sesión actual
-     */
-    fun signOut() {
-        authRepository.signOut()
-        _authUiState.value = UiState.Idle
-    }
-
-    /**
-     * Limpia el estado de UI de autenticación
-     */
-    fun clearAuthUiState() {
-        _authUiState.value = UiState.Idle
+    init {
+        observePublicRecipes()
     }
 
     private fun observePublicRecipes() {
@@ -215,175 +134,115 @@ class ChefViewModel @Inject constructor(
         }
     }
 
-
-    fun generateRecipe(imageBitmap: Bitmap) {
-        val userId = authRepository.currentUserId ?: "usuario_invitado_demo"
-        if (userId == null) {
-            _generationState.value = UiState.Error("Debes iniciar sesión")
-            return
-        }
-
+    fun signIn(email: String, password: String) {
         viewModelScope.launch {
-            _generationState.value = UiState.Loading("Analizando imagen con IA...")
-
-            try {
-                // 1. Generar receta con Firebase AI Logic
-                val generatedRecipe = aiLogicDataSource.generateRecipeFromImage(imageBitmap)
-
-                // 2. Crear objeto Recipe para guardar
-//                val recipe = Recipe(
-//                    userId = userId,
-//                    title = generatedRecipe.title,
-//                    ingredients = generatedRecipe.ingredients,
-//                    steps = generatedRecipe.steps
-//                )
-
-                // 3. Guardar en Firestore
-//                val saveResult = firestoreRepository.saveRecipe(recipe)
-
-//                saveResult.fold(
-//                    onSuccess = { recipeId ->
-//                        // Retornar la receta con el ID generado
-//                        _generationState.value = UiState.Success(recipe.copy(id = recipeId))
-//                    },
-//                    onFailure = { error ->
-//                        _generationState.value = UiState.Error(
-//                            "Receta generada pero no se pudo guardar: ${error.message}"
-//                        )
-//                    }
-//                )
-
-            } catch (e: Exception) {
-
-                val errorMessage = when {
-                    e.message?.contains("quota", ignoreCase = true) == true ->
-                        "Cuota de API excedida. Intenta más tarde."
-                    e.message?.contains("PERMISSION_DENIED", ignoreCase = true) == true ->
-                        "Error de permisos. Verifica la configuración de Firebase."
-                    e.message?.contains("network", ignoreCase = true) == true ->
-                        "Error de conexión. Verifica tu internet."
-                    else ->
-                        "Error al generar receta: ${e.message}"
-                }
-                _generationState.value = UiState.Error(errorMessage)
-            }
+            _authUiState.value = UiState.Loading("Logging in...")
+            val result = authRepository.signIn(email, password)
+            result.fold(
+                onSuccess = { _authUiState.value = UiState.Success(Unit) },
+                onFailure = { error -> _authUiState.value = UiState.Error(error.message ?: "Unknown error") }
+            )
         }
     }
 
-    /**
-     * Limpia el estado de generación
-     */
-    fun clearGenerationState() {
-        _generationState.value = UiState.Idle
-    }
-
-    /**
-     * Elimina una receta
-     */
-    fun deleteRecipe(recipeId: String) {
+    fun signInWithGoogle(idToken: String) {
         viewModelScope.launch {
-            firestoreRepository.deleteRecipe(recipeId)
-        }
-    }
-
-    fun generateRecipeImage(
-        recipeId: String,
-        existingImageUrl: String,
-        recipeTitle: String,
-        ingredients: List<String>
-    ) {
-        // Cancelar generación anterior si existe
-        imageGenerationJob?.cancel()
-
-        imageGenerationJob = viewModelScope.launch {
-            // ================================================================
-            // PASO 1: Verificar si ya existe imagen cacheada
-            // ================================================================
-            if (existingImageUrl.isNotBlank()) {
-                // Ya tenemos la imagen, usar directamente
-                _imageGenerationState.value = UiState.Success(existingImageUrl)
-                return@launch
-            }
-
-            // ================================================================
-            // PASO 2: No hay cache, generar nueva imagen
-            // ================================================================
-            _imageGenerationState.value = UiState.Loading("Generando imagen del plato...")
-
-            try {
-                // Generar imagen con Gemini
-                val bitmap = aiLogicDataSource.generateRecipeImage(recipeTitle, ingredients)
-
-
-                _imageGenerationState.value = UiState.Loading("Guardando imagen...")
-
-                val uploadResult = storageRepository.uploadRecipeImage(recipeId, bitmap)
-
-                uploadResult.fold(
-                    onSuccess = { imageUrl ->
-
-                        //firestoreRepository.updateGeneratedImageUrl(recipeId, imageUrl)
-
-
-                        _imageGenerationState.value = UiState.Success(imageUrl)
-                    },
-                    onFailure = { error ->
-                        _imageGenerationState.value = UiState.Error(
-                            "Imagen generada pero no se pudo guardar: ${error.message}"
-                        )
+            _authUiState.value = UiState.Loading("Connecting with Google...")
+            val result = authRepository.signInWithGoogle(idToken)
+            result.fold(
+                onSuccess = { userId ->
+                    val existingData = userRepository.getUserData(userId)
+                    if (existingData == null) {
+                        val newUserData = UserData(email = "google_user@example.com", name = "Google User")
+                        userRepository.createUserDocument(userId, newUserData)
                     }
-                )
-
-            } catch (e: Exception) {
-                val errorMessage = when {
-                    e.message?.contains("quota", ignoreCase = true) == true ->
-                        "Cuota de API excedida. Intenta más tarde."
-                    e.message?.contains("PERMISSION_DENIED", ignoreCase = true) == true ->
-                        "Error de permisos. Verifica la configuración."
-                    e.message?.contains("not supported", ignoreCase = true) == true ->
-                        "Generación de imágenes no disponible."
-                    else ->
-                        "Error al generar imagen: ${e.message}"
-                }
-                _imageGenerationState.value = UiState.Error(errorMessage)
-            }
+                    _authUiState.value = UiState.Success(Unit)
+                },
+                onFailure = { error -> _authUiState.value = UiState.Error(error.message ?: "Google error") }
+            )
         }
     }
 
-    /**
-     * Limpia el estado de generación de imagen
-     */
-    fun clearImageState() {
+    fun signUp(name: String, email: String, password: String) {
+        viewModelScope.launch {
+            _authUiState.value = UiState.Loading("Creating account...")
+            val authResult = authRepository.signUp(email, password)
+            authResult.fold(
+                onSuccess = { userId ->
+                    val newUserData = UserData(email = email, name = name)
+                    userRepository.createUserDocument(userId, newUserData)
+                    _authUiState.value = UiState.Success(Unit)
+                },
+                onFailure = { error -> _authUiState.value = UiState.Error(error.message ?: "Signup error") }
+            )
+        }
+    }
+
+    fun signOut() {
+        authRepository.signOut()
+        _authUiState.value = UiState.Idle
+    }
+
+    fun clearAuthUiState() { _authUiState.value = UiState.Idle }
+    fun clearGenerationState() { _generationState.value = UiState.Idle }
+    fun clearImageState() { 
         imageGenerationJob?.cancel()
-        _imageGenerationState.value = UiState.Idle
+        _imageGenerationState.value = UiState.Idle 
+    }
+
+    fun deleteRecipe(recipeId: String) {
+        viewModelScope.launch { firestoreRepository.deleteRecipe(recipeId) }
     }
 
     fun toggleFavorite(recipeId: String) {
         val userId = authRepository.currentUserId ?: return
-        viewModelScope.launch {
-            userRepository.toggleFavorite(userId, recipeId)
-        }
+        viewModelScope.launch { userRepository.toggleFavorite(userId, recipeId) }
     }
 
     fun toggleSaveRecipe(recipeId: String) {
         val userId = authRepository.currentUserId ?: return
-        viewModelScope.launch {
-            userRepository.toggleSaveRecipe(userId, recipeId)
-        }
+        viewModelScope.launch { userRepository.toggleSaveRecipe(userId, recipeId) }
     }
 
     fun uploadProfilePicture(bitmap: Bitmap) {
         val userId = authRepository.currentUserId ?: return
         viewModelScope.launch {
-            // Recorte 1:1 (Center Crop)
             val size = minOf(bitmap.width, bitmap.height)
             val x = (bitmap.width - size) / 2
             val y = (bitmap.height - size) / 2
             val croppedBitmap = Bitmap.createBitmap(bitmap, x, y, size, size)
-
             val result = storageRepository.uploadProfilePicture(userId, croppedBitmap)
-            result.onSuccess { url ->
-                userRepository.updateProfilePicture(userId, url)
+            result.onSuccess { url -> userRepository.updateProfilePicture(userId, url) }
+        }
+    }
+
+    fun onSearchQueryChange(query: String) { _searchQuery.value = query }
+    fun onExploreSearchQueryChange(query: String) { _exploreSearchQuery.value = query }
+    fun onToggleInventoryFilter() { _filterByInventory.value = !_filterByInventory.value }
+    fun addIngredient(ingredient: String) {
+        val userId = authRepository.currentUserId ?: return
+        if (ingredient.isBlank()) return
+        viewModelScope.launch { userRepository.addIngredient(userId, ingredient) }
+    }
+    fun removeIngredient(ingredient: String) {
+        val userId = authRepository.currentUserId ?: return
+        viewModelScope.launch { userRepository.removeIngredient(userId, ingredient) }
+    }
+
+    fun generateRecipeImage(recipeId: String, existingImageUrl: String, recipeTitle: String, ingredients: List<String>) {
+        imageGenerationJob?.cancel()
+        imageGenerationJob = viewModelScope.launch {
+            if (existingImageUrl.isNotBlank()) {
+                _imageGenerationState.value = UiState.Success(existingImageUrl)
+                return@launch
+            }
+            _imageGenerationState.value = UiState.Loading("Generating image...")
+            try {
+                val bitmap = aiLogicDataSource.generateRecipeImage(recipeTitle, ingredients)
+                val uploadResult = storageRepository.uploadRecipeImage(recipeId, bitmap)
+                uploadResult.onSuccess { _imageGenerationState.value = UiState.Success(it) }
+            } catch (e: Exception) {
+                _imageGenerationState.value = UiState.Error("Error: ${e.message}")
             }
         }
     }

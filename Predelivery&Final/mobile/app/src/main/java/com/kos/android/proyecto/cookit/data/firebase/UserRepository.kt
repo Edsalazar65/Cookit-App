@@ -94,4 +94,22 @@ class UserRepository @Inject constructor() : IUserRepository {
             Result.failure(e)
         }
     }
+
+    override suspend fun addIngredient(userId: String, ingredient: String): Result<Unit> {
+        return try {
+            usersCollection.document(userId).update("inventory", FieldValue.arrayUnion(ingredient)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun removeIngredient(userId: String, ingredient: String): Result<Unit> {
+        return try {
+            usersCollection.document(userId).update("inventory", FieldValue.arrayRemove(ingredient)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

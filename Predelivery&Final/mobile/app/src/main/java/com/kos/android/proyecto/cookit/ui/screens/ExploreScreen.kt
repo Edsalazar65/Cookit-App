@@ -3,16 +3,19 @@ package com.kos.android.proyecto.cookit.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,15 +35,16 @@ fun ExploreScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
-    val recipes by viewModel.publicRecipes.collectAsStateWithLifecycle()
+    val recipes by viewModel.filteredPublicRecipes.collectAsStateWithLifecycle()
     val userData by viewModel.userData.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.exploreSearchQuery.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = Color(0xFFFDF5E6),
         topBar = {
-            TopAppBar(
-                title = { Text("Explorar Recetas", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+            CenterAlignedTopAppBar(
+                title = { Text("Discover Recipes", fontWeight = FontWeight.Bold, color = Color(0xFF5D4037)) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         },
         bottomBar = {
@@ -53,32 +57,55 @@ fun ExploreScreen(
             )
         }
     ) { paddingValues ->
-        if (recipes.isEmpty()) {
-            // Mensaje que se muestra si no hay recetas para dibujar
-            Box(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("No hay recetas disponibles.", color = Color.Gray)
-            }
-        } else {
-            LazyColumn(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // Barra de búsqueda
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { viewModel.onExploreSearchQueryChange(it) },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                items(recipes) { recipe ->
-                    val isFavorite = userData?.favorites?.contains(recipe.id) == true
-                    val isSaved = userData?.myRecipes?.contains(recipe.id) == true
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(28.dp)),
+                placeholder = { Text("Search all recipes") },
+                leadingIcon = { Icon(Icons.Default.Search, null) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color(0xFFE0E0E0),
+                    focusedContainerColor = Color(0xFFE0E0E0),
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Color.Transparent
+                )
+            )
 
-                    RecipeCard(
-                        recipe = recipe,
-                        isFavorite = isFavorite,
-                        isSaved = isSaved,
-                        onRecipeClick = { id -> onNavigateToRecipeDetail(id) },
-                        onFavoriteClick = { r -> viewModel.toggleFavorite(r.id) },
-                        onSaveClick = { r -> viewModel.toggleSaveRecipe(r.id) }
-                    )
+            if (recipes.isEmpty()) {
+                // Mensaje que se muestra si no hay recetas para dibujar
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No hay recetas disponibles.", color = Color.Gray)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(recipes) { recipe ->
+                        val isFavorite = userData?.favorites?.contains(recipe.id) == true
+                        val isSaved = userData?.myRecipes?.contains(recipe.id) == true
+
+                        RecipeCard(
+                            recipe = recipe,
+                            isFavorite = isFavorite,
+                            isSaved = isSaved,
+                            onRecipeClick = { id -> onNavigateToRecipeDetail(id) },
+                            onFavoriteClick = { r -> viewModel.toggleFavorite(r.id) },
+                            onSaveClick = { r -> viewModel.toggleSaveRecipe(r.id) }
+                        )
+                    }
                 }
             }
         }

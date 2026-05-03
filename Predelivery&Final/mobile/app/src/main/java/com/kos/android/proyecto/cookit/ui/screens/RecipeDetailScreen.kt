@@ -1,118 +1,27 @@
 package com.kos.android.proyecto.cookit.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import com.kos.android.proyecto.cookit.domain.model.UiState
 import com.kos.android.proyecto.cookit.ui.viewmodel.ChefViewModel
 
-/**
- * =============================================================================
- * RecipeDetailScreen - Pantalla de detalle de receta con imagen generada por IA
- * =============================================================================
- *
- * CONCEPTO: Generación de Imágenes con IA y Cache
- * Esta pantalla demuestra el uso de Firebase AI Logic para generar imágenes
- * del plato terminado usando el modelo Gemini con capacidades de generación
- * de imágenes (gemini-3-pro-image-preview).
- *
- * CONCEPTO: Cache de Imágenes con Firebase Storage
- * Para evitar consumir cuota de API en cada visualización, implementamos
- * un sistema de cache:
- * 1. Primera visita: Genera imagen con IA, sube a Storage, guarda URL en Firestore
- * 2. Visitas posteriores: Usa la URL guardada y Coil para cargar eficientemente
- *
- * FLUJO DE CACHE:
- * ┌─────────────┐     ┌──────────────────┐     ┌─────────────┐
- * │ ¿Tiene URL? │─Sí─▶│ Cargar con Coil  │────▶│   Mostrar   │
- * └──────┬──────┘     └──────────────────┘     └─────────────┘
- *        │No
- *        ▼
- * ┌─────────────┐     ┌──────────────────┐     ┌─────────────┐
- * │ Generar IA  │────▶│ Subir a Storage  │────▶│ Guardar URL │
- * └─────────────┘     └──────────────────┘     └─────────────┘
- *
- * ARQUITECTURA DE LA PANTALLA:
- * ┌─────────────────────────────────────────┐
- * │            TopAppBar                     │
- * │  ← Volver          Título de Receta     │
- * ├─────────────────────────────────────────┤
- * │     ┌─────────────────────────────┐     │
- * │     │   Imagen Generada por IA    │     │
- * │     │   (cache en Storage)        │     │
- * │     └─────────────────────────────┘     │
- * │     ┌─────────────────────────────┐     │
- * │     │      INGREDIENTES           │     │
- * │     │  ✓ Ingrediente 1            │     │
- * │     └─────────────────────────────┘     │
- * │     ┌─────────────────────────────┐     │
- * │     │      PREPARACIÓN            │     │
- * │     │  1. Paso uno                │     │
- * │     └─────────────────────────────┘     │
- * └─────────────────────────────────────────┘
- *
- * CONCEPTOS CLAVE DEMOSTRADOS:
- *
- * 1. LaunchedEffect para Side Effects:
- *    - Dispara la verificación de cache o generación de imagen
- *    - Se ejecuta una vez por receta (key = recipe)
- *
- * 2. Manejo de Estados UI:
- *    - Idle: Esperando iniciar
- *    - Loading: Generando/cargando imagen
- *    - Success: URL lista, Coil carga la imagen
- *    - Error: Fallo con opción de reintentar
- *
- * 3. Coil AsyncImage para carga de URLs:
- *    - Carga asíncrona desde URL de Firebase Storage
- *    - Cache automático en memoria y disco
- *    - Manejo de estados de carga internos
- *
- * 4. Scroll vertical con rememberScrollState:
- *    - Permite scroll cuando el contenido excede la pantalla
- *    - Mantiene posición durante recomposiciones
- *
- * =============================================================================
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeDetailScreen(
@@ -120,381 +29,176 @@ fun RecipeDetailScreen(
     recipeId: String,
     onNavigateBack: () -> Unit
 ) {
-    // =========================================================================
-    // OBSERVACIÓN DE ESTADOS
-    // =========================================================================
-    // Obtenemos la receta buscándola en la lista del ViewModel
-    // Esto evita una llamada adicional a Firestore
-    val recipes by viewModel.recipes.collectAsStateWithLifecycle()
-    val recipe = recipes.find { it.id == recipeId }
-
-    // Estado de la generación de imagen
-    val imageState by viewModel.imageGenerationState.collectAsStateWithLifecycle()
-
-    // =========================================================================
-    // SIDE EFFECT: Verificar Cache o Generar Imagen
-    // =========================================================================
-    // LaunchedEffect se ejecuta cuando 'recipe' cambia
-    // Esto verifica si existe imagen cacheada o genera una nueva
-    //
-    // CONCEPTO: LaunchedEffect
-    // - Se ejecuta en un CoroutineScope ligado al ciclo de vida del composable
-    // - Se cancela automáticamente si el composable sale de composición
-    // - La key (recipe) determina cuándo re-ejecutar el efecto
-    //
-    // CONCEPTO: Cache-First Strategy
-    // - Si recipe.generatedImageUrl no está vacía, se usa directamente
-    // - Si está vacía, se genera con IA, sube a Storage, y guarda URL
-    LaunchedEffect(recipe) {
-        recipe?.let {
-
-        }
-    }
+    val publicRecipes by viewModel.publicRecipes.collectAsStateWithLifecycle()
+    val userData by viewModel.userData.collectAsStateWithLifecycle()
+    
+    val recipe = publicRecipes.find { it.id == recipeId }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(recipe?.name ?: "Detalle de Receta") },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        // Limpiamos el estado de imagen al salir para evitar
-                        // mostrar la imagen anterior en la próxima receta
-                        viewModel.clearImageState()
-                        onNavigateBack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
+        containerColor = Color(0xFFFDF5E6)
     ) { paddingValues ->
         if (recipe == null) {
-            // Estado de error: receta no encontrada
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(paddingValues), 
                 contentAlignment = Alignment.Center
             ) {
-                Text("Receta no encontrada")
+                CircularProgressIndicator(color = Color(0xFF388E3C))
             }
         } else {
-            // ================================================================
-            // CONTENIDO SCROLLEABLE
-            // ================================================================
-            // verticalScroll permite scroll cuando el contenido es largo
-            // rememberScrollState mantiene la posición durante recomposiciones
+            val isFavorite = userData?.favorites?.contains(recipe.id) == true
+            val isSaved = userData?.myRecipes?.contains(recipe.id) == true
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp)
+                    .padding(bottom = 32.dp)
             ) {
-                // Sección de imagen generada por IA con cache
-                RecipeImageSection(
-                    imageState = imageState,
-                    recipeTitle = recipe.name,
-                    onRetry = {
-                        viewModel.generateRecipeImage(
-                            recipeId = recipe.id,
-                            existingImageUrl = "", // Forzar regeneración
-                            recipeTitle = recipe.name,
-                            ingredients = recipe.ingredients
-                        )
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Sección de ingredientes
-                IngredientsSection(ingredients = recipe.ingredients)
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Sección de pasos de preparación
-                StepsSection(steps = recipe.steps)
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-        }
-    }
-}
-
-
-@Composable
-private fun RecipeImageSection(
-    imageState: UiState<String>,
-    recipeTitle: String,
-    onRetry: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        // ====================================================================
-        // ASPECT RATIO
-        // ====================================================================
-        // aspectRatio(16f / 9f) mantiene proporción 16:9 (widescreen)
-        // Esto asegura que la imagen siempre tenga la misma forma
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f),
-            contentAlignment = Alignment.Center
-        ) {
-            // ================================================================
-            // MANEJO EXHAUSTIVO DE ESTADOS
-            // ================================================================
-            // 'when' con sealed class garantiza que manejamos todos los casos
-            when (imageState) {
-                is UiState.Idle -> {
-                    // Estado inicial - esperando que inicie la generación
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Restaurant,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Preparando imagen...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                is UiState.Loading -> {
-                    // Estado de carga - la IA está generando la imagen
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            // Icono de "magia" para indicar IA
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(
-                                text = imageState.message ?: "Generando imagen con IA...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                is UiState.Success -> {
-                    // ========================================================
-                    // ÉXITO: Cargar imagen desde URL con Coil
-                    // ========================================================
-                    // AsyncImage de Coil carga imágenes desde URLs de forma
-                    // asíncrona con cache automático en memoria y disco.
-                    // La URL puede ser de Firebase Storage (cache) o cualquier
-                    // otra fuente compatible.
-                    //
-                    // CONCEPTO: ContentScale.Crop
-                    // Recorta la imagen para llenar completamente el espacio
-                    // disponible, manteniendo la proporción del aspecto
+                // Header con Imagen y Botón Volver
+                Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
                     AsyncImage(
-                        model = imageState.data,
-                        contentDescription = "Imagen de $recipeTitle",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(12.dp)),
+                        model = recipe.imageURL,
+                        contentDescription = recipe.name,
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-                }
-
-                is UiState.Error -> {
-                    // Estado de error - mostrar mensaje y botón de reintentar
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.padding(16.dp)
+                    
+                    // Botón Volver (Circular y con contraste)
+                    Surface(
+                        modifier = Modifier.padding(16.dp).size(40.dp),
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.8f),
+                        onClick = onNavigateBack
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Restaurant,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.error
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.padding(8.dp),
+                            tint = Color.Black
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = imageState.message,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(onClick = onRetry) {
-                            Text("Reintentar")
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Título y Dificultad
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = recipe.name,
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 28.sp
+                                ),
+                                color = Color(0xFF5D4037)
+                            )
+                            Surface(
+                                color = Color(0xFFFFD180),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = recipe.difficulty.uppercase(),
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF5D4037)
+                                )
+                            }
+                        }
+
+                        // Botones de acción
+                        Row {
+                            IconButton(onClick = { viewModel.toggleFavorite(recipe.id) }) {
+                                Icon(
+                                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                    contentDescription = "Favorite",
+                                    tint = if (isFavorite) Color(0xFFD32F2F) else Color.Gray,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                            IconButton(onClick = { viewModel.toggleSaveRecipe(recipe.id) }) {
+                                Icon(
+                                    imageVector = if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                    contentDescription = "Save",
+                                    tint = if (isSaved) Color(0xFF388E3C) else Color.Gray,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
                         }
                     }
-                }
-            }
-        }
-    }
-}
 
-/**
- * =============================================================================
- * IngredientsSection - Sección de ingredientes
- * =============================================================================
- *
- * CONCEPTO: Composición de Listas
- * En Compose, para listas pequeñas (< 20 items) podemos usar forEach
- * directamente en un Column. Para listas grandes, usar LazyColumn.
- *
- * Esta sección itera sobre los ingredientes y los muestra con un
- * ícono de check para indicar que son items de una lista.
- *
- * =============================================================================
- */
-@Composable
-private fun IngredientsSection(ingredients: List<String>) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Título de la sección
-            Text(
-                text = "Ingredientes",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+                    Spacer(modifier = Modifier.height(32.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Lista de ingredientes con íconos
-            ingredients.forEach { ingredient ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.secondary
-                    )
+                    // Sección Ingredientes
                     Text(
-                        text = ingredient,
-                        style = MaterialTheme.typography.bodyLarge
+                        text = "Ingredients",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF388E3C)
                     )
-                }
-            }
-        }
-    }
-}
-
-/**
- * =============================================================================
- * StepsSection - Sección de pasos de preparación
- * =============================================================================
- *
- * CONCEPTO: forEachIndexed para Listas Numeradas
- * Cuando necesitamos el índice además del elemento, usamos forEachIndexed.
- * Esto nos permite numerar los pasos automáticamente.
- *
- * CONCEPTO: Badges Circulares
- * El número del paso se muestra en un Card circular usando:
- * - shape = RoundedCornerShape(50) para hacerlo circular
- * - padding simétrico para mantener forma
- *
- * =============================================================================
- */
-@Composable
-private fun StepsSection(steps: List<String>) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Título de la sección
-            Text(
-                text = "Preparación",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Lista numerada de pasos
-            steps.forEachIndexed { index, step ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Badge circular con número del paso
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        ),
-                        shape = RoundedCornerShape(50) // Forma circular
-                    ) {
-                        Text(
-                            text = "${index + 1}",
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    recipe.ingredients.forEach { ingredient ->
+                        Row(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF388E3C),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(text = ingredient, fontSize = 16.sp)
+                        }
                     }
 
-                    // Texto del paso
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // Sección Pasos
                     Text(
-                        text = step,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f)
+                        text = "Instructions",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF388E3C)
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    recipe.steps.forEachIndexed { index, step ->
+                        Row(modifier = Modifier.padding(vertical = 8.dp)) {
+                            Surface(
+                                modifier = Modifier.size(24.dp),
+                                shape = CircleShape,
+                                color = Color(0xFFFFD180)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = (index + 1).toString(),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF5D4037)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = step,
+                                fontSize = 16.sp,
+                                lineHeight = 22.sp
+                            )
+                        }
+                    }
                 }
             }
         }
