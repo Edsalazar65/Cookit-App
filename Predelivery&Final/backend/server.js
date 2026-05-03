@@ -6,6 +6,7 @@ const path = require("path");
 const admin = require("firebase-admin");
 
 const serviceAccount = require("./serviceAccountKey.json");
+const { GoogleAuth } = require("google-auth-library");
 
 try {
   admin.initializeApp({
@@ -23,7 +24,7 @@ app.use(cors());
 app.use(express.json());
 
 
-app.get("/", (req, res)=>{res.sendFile(path.join(__dirname, "..", "web_frontend", "login.html"));});
+app.get("/", (req, res) => { res.sendFile(path.join(__dirname, "..", "web_frontend", "login.html")); });
 app.use(express.static(path.join(__dirname, "..", "web_frontend")));
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -60,6 +61,59 @@ app.post("/api/chat", async (req, res) => {
     res.status(500).json({ text: "🐭 Ups, se me quemó la salsa. ¿Intentas de nuevo?" });
   }
 });
+
+// Nuevo endpoint para generar imágenes
+app.post("/api/generate-image", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    const auth = new GoogleAuth({
+      
+      keyFilename: "./serviceAccountKey.json",
+      scopes: "https://www.googleapis.com/auth/cloud-platform",
+    });
+    const client = await auth.getClient();
+    const projectId = await auth.getProjectId();
+
+
+    const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/imagen-4.0-fast-generate-001`;
+
+    const requestBody = {
+      instances: [
+        {
+          prompt: prompt,
+        },
+      ],
+      parameters: {
+        sampleCount: 1,
+        aspectRatio: "4:3",
+      },
+    };
+
+
+    const response = await client.request({
+      method: "POST",
+      url: url,
+      data: requestBody,
+    });
+
+
+    if (response.data.predictions && response.data.predictions.length > 0) {
+
+      const base64Image = response.data.predictions[0].bytesBase64Encoded;
+
+      res.json({ base64: base64Image, type: "image/png" });
+    } else {
+      throw new Error("No se generó ninguna imagen.");
+    }
+
+  } catch (error) {
+
+    console.error("Error generando imagen:", error.response ? error.response.data : error.message);
+    res.status(500).json({ error: "No pude pintar el plato, mon ami." });
+  }
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

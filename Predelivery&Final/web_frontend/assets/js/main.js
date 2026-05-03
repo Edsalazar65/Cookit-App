@@ -129,30 +129,90 @@ $(document).ready(function () {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: enrichedPrompt,
-          userId: currentUserId,
-        }),
+        body: JSON.stringify({ prompt: enrichedPrompt, userId: currentUserId }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.text || "Error en el servidor");
+      }
 
       const data = await response.json();
       $loading.remove();
+      let isRecipe = false;
 
       let botReply = data.text;
 
       try {
-        const cleanJsonString = botReply.replace(/```json/g, "").replace(/```/g, "").trim();
-        const recipeData = JSON.parse(cleanJsonString);
+        const start = botReply.indexOf('{');
+        const end = botReply.lastIndexOf('}');
+        if (start !== -1 && end !== -1) {
+          const cleanJsonString = botReply.substring(start, end + 1);
+          const recipeData = JSON.parse(cleanJsonString);
 
-        if (recipeData.name && recipeData.ingredients && recipeData.steps) {
+          if (recipeData.name && recipeData.ingredients && recipeData.steps) {
 
-          await addDoc(collection(db, "public_recipes"), recipeData);
+            if (botReply.includes("{") && botReply.includes("name")) {
+              const cleanJsonString = botReply.replace(/```json/g, "").replace(/```/g, "").trim();
+              const recipeData = JSON.parse(cleanJsonString);
+            }
 
-          botReply = `¡Voilà! He creado una nueva receta usando lo que tienes en tu despensa: **${recipeData.name}**. La he guardado en el recetario principal para que puedas verla. 🐭✨`;
+            const $imgLoading = $(`<div class="bot-message" style="margin-bottom: 15px; color: #757575;"><em>Creando el plato...</em></div>`);
+            $messagesContainer.append($imgLoading);
+            $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
 
-          loadPublicRecipes();
+            let finalImageURL = "images/placeholder.png"; // Imagen por defecto por si falla
+
+            try {
+
+              const imgRes = await fetch("/api/generate-image", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: recipeData.imagePrompt })
+              });
+
+              const imgData = await imgRes.json();
+
+              if (imgData.base64) {
+
+                const byteCharacters = atob(imgData.base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                  byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const imageType = imgData.type || 'image/png';
+                const blob = new Blob([byteArray], { type: imageType });
+
+
+                const fileExtension = imageType === 'image/jpeg' ? 'jpg' : 'png';
+                const uniqueName = `recipes/${Date.now()}_${recipeData.name.replace(/\s+/g, '_')}.${fileExtension}`;
+                const storageRef = ref(storage, uniqueName);
+
+                await uploadBytes(storageRef, blob);
+
+                finalImageURL = await getDownloadURL(storageRef);
+              }
+            } catch (imgError) {
+              console.error("Error al generar o subir la imagen:", imgError);
+            }
+
+            $imgLoading.remove();
+
+
+            recipeData.imageURL = finalImageURL;
+
+
+
+            await addDoc(collection(db, "public_recipes"), recipeData);
+
+            botReply = `¡Voilà! He creado una nueva receta usando lo que tienes en tu despensa: **${recipeData.name}**. La he guardado en el recetario principal con su foto para que puedas verla. 🐭✨`;
+
+            loadPublicRecipes();
+          }
         }
       } catch (e) {
+        console.error("Error procesando el JSON de Remy:", e);
       }
 
       $messagesContainer.append(`

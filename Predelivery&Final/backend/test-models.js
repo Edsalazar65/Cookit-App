@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function listRealModels() {
   try {
-    // Esta es la forma correcta de listar en versiones recientes
+    
     const response = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${process.env.GEMINI_API_KEY}`);
     const data = await response.json();
     
