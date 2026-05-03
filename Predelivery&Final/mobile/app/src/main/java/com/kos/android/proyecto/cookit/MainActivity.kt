@@ -17,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.kos.android.proyecto.cookit.domain.model.AuthState
 import com.kos.android.proyecto.cookit.ui.screens.AuthScreen
+import com.kos.android.proyecto.cookit.ui.screens.ExploreScreen
 import com.kos.android.proyecto.cookit.ui.screens.GeneratorScreen
 import com.kos.android.proyecto.cookit.ui.screens.HomeScreen
 import com.kos.android.proyecto.cookit.ui.screens.ProfileScreen
@@ -54,6 +55,7 @@ object NavRoutes {
     const val AUTH = "auth"
     const val HOME = "home"
 
+    const val EXPLORE = "explore"
     const val FAVORITES = "favorites"
     const val GENERATOR = "generator"
     const val RECIPE_DETAIL = "recipe_detail/{recipeId}"
@@ -105,16 +107,44 @@ fun AiChefNavigation() {
                     navController.navigate(NavRoutes.recipeDetail(recipeId))
                 },
                 onNavigateToFavorites = {
-                    navController.navigate("favorites")
+                    navController.navigate(NavRoutes.FAVORITES)
                 },
                 onNavigateToProfile = {
                     navController.navigate(NavRoutes.PROFILE)
+                },
+                onNavigateToExplore = {                         // <-- 2. AGREGAR ESTE BLOQUE
+                    navController.navigate(NavRoutes.EXPLORE)
                 },
                 onLogout = {
                     navController.navigate(NavRoutes.AUTH) {
                         popUpTo(NavRoutes.HOME) { inclusive = true }
                     }
                 }
+            )
+        }
+        composable(NavRoutes.EXPLORE) {
+            ExploreScreen(
+                viewModel = viewModel,
+                /*onNavigateToGenerator = {
+                    navController.navigate(NavRoutes.GENERATOR)
+                },*/
+                onNavigateToRecipeDetail = { recipeId ->
+                    navController.navigate(NavRoutes.recipeDetail(recipeId))
+                },
+                onNavigateToFavorites = {
+                    navController.navigate(NavRoutes.FAVORITES)
+                },
+                onNavigateToProfile = {
+                    navController.navigate(NavRoutes.PROFILE)
+                },
+                onNavigateToHome = {
+                    navController.navigate(NavRoutes.HOME)
+                },
+               /*onLogout = {
+                    navController.navigate(NavRoutes.AUTH) {
+                        popUpTo(NavRoutes.HOME) { inclusive = true }
+                    }
+                }*/
             )
         }
 

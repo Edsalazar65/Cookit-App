@@ -31,6 +31,7 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToFavorites: () -> Unit,
+    onNavigateToExplore: () -> Unit, // 1. AGREGAMOS EL NUEVO PARÁMETRO AQUÍ
     onLogout: () -> Unit
 ) {
     val recipes by viewModel.recipes.collectAsStateWithLifecycle()
@@ -59,25 +60,31 @@ fun HomeScreen(
             )
         },
         bottomBar = {
-            NavigationBar(containerColor = Color.White) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, null) },
-                    selected = true,
-                    onClick = { },
-                    colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF388E3C))
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Favorite, null) },
-                    selected = false,
-                    onClick = onNavigateToFavorites
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Person, null) },
-                    selected = false,
-                    onClick = {onNavigateToProfile() }
-                )
-            }
-        },
+                NavigationBar(containerColor = Color.White) {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Home, null) },
+                        selected = true,
+                        onClick = { },
+                        colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF388E3C))
+                    )
+                    // 2. AGREGAMOS EL BOTÓN DE EXPLORAR AQUÍ
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Explore, null) },
+                        selected = false,
+                        onClick = onNavigateToExplore
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Favorite, null) },
+                        selected = false,
+                        onClick = onNavigateToFavorites
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Person, null) },
+                        selected = false,
+                        onClick = { onNavigateToProfile() }
+                    )
+                }
+            },
 
         floatingActionButton = {
             FloatingActionButton(

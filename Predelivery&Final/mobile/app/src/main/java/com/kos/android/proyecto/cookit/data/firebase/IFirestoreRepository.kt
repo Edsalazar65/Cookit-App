@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.Flow
  */
 interface IFirestoreRepository {
 
+    fun observePublicRecipes(): Flow<List<Recipe>>
+
     /**
      * Observa las recetas de un usuario en tiempo real
      * @param userId ID del usuario autenticado

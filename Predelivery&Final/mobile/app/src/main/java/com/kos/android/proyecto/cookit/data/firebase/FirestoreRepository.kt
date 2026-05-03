@@ -17,6 +17,8 @@ class FirestoreRepository @javax.inject.Inject constructor() : IFirestoreReposit
     // Referencia a la colección de recetas
     private val recipesCollection = firestore.collection("recipes")
 
+    private val publicRecipesCollection = firestore.collection("public_recipes")
+
     override fun observeUserRecipes(userId: String): Flow<List<Recipe>> = callbackFlow {
         // Crear query para obtener solo las recetas del usuario
         // Ordenadas por fecha de creación (más recientes primero)
@@ -46,6 +48,29 @@ class FirestoreRepository @javax.inject.Inject constructor() : IFirestoreReposit
         awaitClose {
             listenerRegistration.remove()
         }
+    }
+
+    override fun observePublicRecipes(): Flow<List<Recipe>> = callbackFlow {
+        val listenerRegistration = publicRecipesCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(emptyList())
+                return@addSnapshotListener
+            }
+
+            val recipes = snapshot?.documents?.mapNotNull { document ->
+                try {
+                    val data = document.data ?: return@mapNotNull null
+                    // Asumiendo que usas Recipe.fromFirestore o mapeas los datos manualmente como en tu otra función
+                    Recipe.fromFirestore(document.id, data)
+                } catch (e: Exception) {
+                    null
+                }
+            } ?: emptyList()
+
+            trySend(recipes)
+        }
+
+        awaitClose { listenerRegistration.remove() }
     }
 
 

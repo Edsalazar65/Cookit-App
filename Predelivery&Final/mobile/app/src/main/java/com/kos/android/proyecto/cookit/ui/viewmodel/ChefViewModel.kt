@@ -24,6 +24,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.kos.android.proyecto.cookit.data.firebase.IUserRepository
 import com.kos.android.proyecto.cookit.domain.model.UserData
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 
 @HiltViewModel
@@ -37,7 +39,12 @@ class ChefViewModel @Inject constructor(
 ) : ViewModel() {
 
 
+    private val _publicRecipes = MutableStateFlow<List<Recipe>>(emptyList())
+    val publicRecipes: StateFlow<List<Recipe>> = _publicRecipes.asStateFlow()
 
+    init {
+        observePublicRecipes()
+    }
 
     val authState: StateFlow<AuthState> = authRepository.observeAuthState()
         .stateIn(
@@ -184,7 +191,13 @@ class ChefViewModel @Inject constructor(
         _authUiState.value = UiState.Idle
     }
 
-
+    private fun observePublicRecipes() {
+        viewModelScope.launch {
+            firestoreRepository.observePublicRecipes().collect { recipes ->
+                _publicRecipes.value = recipes
+            }
+        }
+    }
 
 
     fun generateRecipe(imageBitmap: Bitmap) {
@@ -285,26 +298,20 @@ class ChefViewModel @Inject constructor(
                 // Generar imagen con Gemini
                 val bitmap = aiLogicDataSource.generateRecipeImage(recipeTitle, ingredients)
 
-                // ============================================================
-                // PASO 3: Subir imagen a Firebase Storage
-                // ============================================================
+
                 _imageGenerationState.value = UiState.Loading("Guardando imagen...")
 
                 val uploadResult = storageRepository.uploadRecipeImage(recipeId, bitmap)
 
                 uploadResult.fold(
                     onSuccess = { imageUrl ->
-                        // ====================================================
-                        // PASO 4: Guardar URL en Firestore para futuro cache
-                        // ====================================================
-                        firestoreRepository.updateGeneratedImageUrl(recipeId, imageUrl)
 
-                        // Éxito - devolver la URL
+                        //firestoreRepository.updateGeneratedImageUrl(recipeId, imageUrl)
+
+
                         _imageGenerationState.value = UiState.Success(imageUrl)
                     },
                     onFailure = { error ->
-                        // Error al subir, pero tenemos el bitmap
-                        // Podríamos mostrar el bitmap directamente como fallback
                         _imageGenerationState.value = UiState.Error(
                             "Imagen generada pero no se pudo guardar: ${error.message}"
                         )

@@ -5,16 +5,18 @@ data class Recipe(
     val name: String = "",
     val ingredients: List<String> = emptyList(),
     val steps: List<String> = emptyList(),
-    val imageUrl: String = "",
+    val imageURL: String = "",
+    val difficulty: String= ""
 
 ) {
 
     fun toMap(): Map<String, Any> = mapOf(
         "ingredients" to ingredients,
         "steps" to steps,
-        "imageUrl" to imageUrl,
+        "imageURL" to imageURL,
         "id" to id,
-        "name" to name
+        "name" to name,
+        "difficulty" to difficulty
     )
 
     companion object {
@@ -26,7 +28,7 @@ data class Recipe(
                 name = data["name"] as? String ?: "",
                 ingredients = (data["ingredients"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                 steps = (data["steps"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                imageUrl = data["imageUrl"] as? String ?: "",
+                imageURL = data["imageURL"] as? String ?: "",
             )
         }
     }
