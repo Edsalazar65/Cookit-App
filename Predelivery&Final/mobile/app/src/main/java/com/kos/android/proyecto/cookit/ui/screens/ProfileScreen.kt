@@ -1,5 +1,12 @@
 package com.kos.android.proyecto.cookit.ui.screens
 
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -9,42 +16,60 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import com.kos.android.proyecto.cookit.ui.components.CookitBottomNavigation
+import com.kos.android.proyecto.cookit.ui.components.CookitScreen
+import com.kos.android.proyecto.cookit.ui.viewmodel.ChefViewModel
 
 @Composable
 fun ProfileScreen(
-    onNavigateBack: () -> Unit,
-    onLogout: () -> Unit,
-    onNavigateToFavorites: () ->Unit
-    // Pasar datos del usuario
+    viewModel: ChefViewModel,
+    onNavigateToHome: () -> Unit,
+    onNavigateToExplore: () -> Unit,
+    onNavigateToFavorites: () -> Unit,
+    onLogout: () -> Unit
 ) {
-    Scaffold(
-        containerColor = Color(0xFFFDF5E6), // Fondo crema suave de la imagen web
-        bottomBar = {
-            NavigationBar(containerColor = Color.White) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, null) },
-                    selected = false,
-                    onClick = onNavigateBack
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Favorite, null) },
-                    selected = false,
-                    onClick = onNavigateToFavorites
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Person, null) },
-                    selected = true,
-                    onClick = { },
-                    colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF388E3C))
-                )
+    val userData by viewModel.userData.collectAsStateWithLifecycle()
+    val favoriteRecipes by viewModel.favoriteRecipes.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val bitmap = if (Build.VERSION.SDK_INT < 28) {
+                MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+            } else {
+                val source = ImageDecoder.createSource(context.contentResolver, it)
+                ImageDecoder.decodeBitmap(source)
             }
+            viewModel.uploadProfilePicture(bitmap)
+        }
+    }
+
+    val firstName = userData?.name?.split(" ")?.firstOrNull() ?: "Chef"
+
+    Scaffold(
+        containerColor = Color(0xFFFDF5E6),
+        bottomBar = {
+            CookitBottomNavigation(
+                currentScreen = CookitScreen.PROFILE,
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToExplore = onNavigateToExplore,
+                onNavigateToFavorites = onNavigateToFavorites,
+                onNavigateToProfile = { }
+            )
         }
     ) { paddingValues ->
         Column(
@@ -57,27 +82,40 @@ fun ProfileScreen(
         ) {
             Spacer(modifier = Modifier.height(30.dp))
 
-
             Box(contentAlignment = Alignment.BottomEnd) {
                 Surface(
                     modifier = Modifier.size(140.dp),
                     shape = CircleShape,
                     color = Color.White,
-                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFFCC80)) // Borde naranja suave
+                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFFFCC80))
                 ) {
-
-                    Box(modifier = Modifier.padding(10.dp), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.RestaurantMenu, null, modifier = Modifier.size(70.dp), tint = Color.Gray)
+                    if (userData?.photoURL.isNullOrBlank()) {
+                        Box(modifier = Modifier.padding(10.dp), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.RestaurantMenu, null, modifier = Modifier.size(70.dp), tint = Color.Gray)
+                        }
+                    } else {
+                        AsyncImage(
+                            model = userData?.photoURL,
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    
+                    // Overlay de carga si se está procesando
+                    if (userData == null) {
+                        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = Color.White)
+                        }
                     }
                 }
-
 
                 Surface(
                     modifier = Modifier.size(36.dp),
                     shape = CircleShape,
-                    color = Color(0xFFFFD180), // Fondo naranja de la web
+                    color = Color(0xFFFFD180),
                     shadowElevation = 4.dp,
-                    onClick = { /* Acción editar imagen */ }
+                    onClick = { galleryLauncher.launch("image/*") }
                 ) {
                     Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.padding(6.dp))
                 }
@@ -86,7 +124,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "Chef Gustavo",
+                text = "Chef $firstName",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp
@@ -113,7 +151,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    StatItem(value = "12", label = "FAVORITES")
+                    StatItem(value = favoriteRecipes.size.toString(), label = "FAVORITES")
                     StatItem(value = "5", label = "FRIENDS")
                 }
             }
@@ -139,7 +177,7 @@ fun ProfileScreen(
                     .width(160.dp)
                     .height(45.dp),
                 shape = RoundedCornerShape(22.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF9A9A)) // Rojo suave de la imagen
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF9A9A))
             ) {
                 Text(
                     "LOG OUT",
@@ -166,7 +204,7 @@ private fun InfoCard(title: String, content: @Composable () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.Black)
-            Divider(modifier = Modifier.padding(vertical = 12.dp, horizontal = 24.dp), color = Color.Gray)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp, horizontal = 24.dp), color = Color.Gray)
             content()
         }
     }

@@ -24,8 +24,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.kos.android.proyecto.cookit.data.firebase.IUserRepository
 import com.kos.android.proyecto.cookit.domain.model.UserData
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
 
 
 @HiltViewModel
@@ -38,14 +37,6 @@ class ChefViewModel @Inject constructor(
     private val aiLogicDataSource: IAiLogicDataSource
 ) : ViewModel() {
 
-
-    private val _publicRecipes = MutableStateFlow<List<Recipe>>(emptyList())
-    val publicRecipes: StateFlow<List<Recipe>> = _publicRecipes.asStateFlow()
-
-    init {
-        observePublicRecipes()
-    }
-
     val authState: StateFlow<AuthState> = authRepository.observeAuthState()
         .stateIn(
             scope = viewModelScope,
@@ -53,27 +44,52 @@ class ChefViewModel @Inject constructor(
             initialValue = AuthState.Loading
         )
 
+    private val _publicRecipes = MutableStateFlow<List<Recipe>>(emptyList())
+    val publicRecipes: StateFlow<List<Recipe>> = _publicRecipes.asStateFlow()
 
-
-    private val _authUiState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
-    val authUiState: StateFlow<UiState<Unit>> = _authUiState.asStateFlow()
-
-
-    val recipes: StateFlow<List<Recipe>> = authState
+    val userData: StateFlow<UserData?> = authState
         .flatMapLatest { state ->
             when (state) {
-                is AuthState.Authenticated -> {
-                    firestoreRepository.observeUserRecipes(state.userId)
-                }
-                else -> flowOf(emptyList())
+                is AuthState.Authenticated -> userRepository.observeUserData(state.userId)
+                else -> flowOf(null)
             }
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
+            initialValue = null
         )
 
+    val favoriteRecipes: StateFlow<List<Recipe>> = combine(
+        publicRecipes,
+        userData
+    ) { publicList, user ->
+        val favoriteIds = user?.favorites ?: emptyList()
+        publicList.filter { it.id in favoriteIds }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val recipes: StateFlow<List<Recipe>> = combine(
+        publicRecipes,
+        userData
+    ) { publicList, user ->
+        val myRecipeIds = user?.myRecipes ?: emptyList()
+        publicList.filter { it.id in myRecipeIds }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    init {
+        observePublicRecipes()
+    }
+
+    private val _authUiState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
+    val authUiState: StateFlow<UiState<Unit>> = _authUiState.asStateFlow()
 
     private val _generationState = MutableStateFlow<UiState<Recipe>>(UiState.Idle)
     val generationState: StateFlow<UiState<Recipe>> = _generationState.asStateFlow()
@@ -340,5 +356,35 @@ class ChefViewModel @Inject constructor(
     fun clearImageState() {
         imageGenerationJob?.cancel()
         _imageGenerationState.value = UiState.Idle
+    }
+
+    fun toggleFavorite(recipeId: String) {
+        val userId = authRepository.currentUserId ?: return
+        viewModelScope.launch {
+            userRepository.toggleFavorite(userId, recipeId)
+        }
+    }
+
+    fun toggleSaveRecipe(recipeId: String) {
+        val userId = authRepository.currentUserId ?: return
+        viewModelScope.launch {
+            userRepository.toggleSaveRecipe(userId, recipeId)
+        }
+    }
+
+    fun uploadProfilePicture(bitmap: Bitmap) {
+        val userId = authRepository.currentUserId ?: return
+        viewModelScope.launch {
+            // Recorte 1:1 (Center Crop)
+            val size = minOf(bitmap.width, bitmap.height)
+            val x = (bitmap.width - size) / 2
+            val y = (bitmap.height - size) / 2
+            val croppedBitmap = Bitmap.createBitmap(bitmap, x, y, size, size)
+
+            val result = storageRepository.uploadProfilePicture(userId, croppedBitmap)
+            result.onSuccess { url ->
+                userRepository.updateProfilePicture(userId, url)
+            }
+        }
     }
 }

@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.kos.android.proyecto.cookit.domain.model.AuthState
 import com.kos.android.proyecto.cookit.ui.screens.AuthScreen
 import com.kos.android.proyecto.cookit.ui.screens.ExploreScreen
+import com.kos.android.proyecto.cookit.ui.screens.FavoritesScreen
 import com.kos.android.proyecto.cookit.ui.screens.GeneratorScreen
 import com.kos.android.proyecto.cookit.ui.screens.HomeScreen
 import com.kos.android.proyecto.cookit.ui.screens.ProfileScreen
@@ -149,16 +150,19 @@ fun AiChefNavigation() {
         }
 
         composable(NavRoutes.FAVORITES) {
-            val recipes by viewModel.recipes.collectAsStateWithLifecycle()
-//            val favoriteRecipes = recipes.filter { it.isFavorite }
-
-//            FavoritesScreen(
-//                onNavigateBack = { navController.navigate(NavRoutes.HOME) },
-//                onNavigateToProfile = {
-//                    navController.navigate(NavRoutes.PROFILE)
-//                },
-////                favoriteRecipes = favoriteRecipes
-//            )
+            FavoritesScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.navigate(NavRoutes.HOME) },
+                onNavigateToProfile = {
+                    navController.navigate(NavRoutes.PROFILE)
+                },
+                onNavigateToExplore = {
+                    navController.navigate(NavRoutes.EXPLORE)
+                },
+                onNavigateToDetail = { recipeId ->
+                    navController.navigate(NavRoutes.recipeDetail(recipeId))
+                }
+            )
         }
 
         // Pantalla de generación de recetas con IA
@@ -188,20 +192,22 @@ fun AiChefNavigation() {
 
         //Pantalla de perfil
         composable(NavRoutes.PROFILE) {
-
             ProfileScreen(
-                onNavigateBack = {
+                viewModel = viewModel,
+                onNavigateToHome = {
                     navController.navigate(NavRoutes.HOME)
                 },
+                onNavigateToExplore = {
+                    navController.navigate(NavRoutes.EXPLORE)
+                },
+                onNavigateToFavorites = {
+                    navController.navigate(NavRoutes.FAVORITES)
+                },
                 onLogout = {
-
                     viewModel.signOut()
                     navController.navigate(NavRoutes.AUTH) {
                         popUpTo(NavRoutes.HOME) { inclusive = true }
                     }
-                },
-                onNavigateToFavorites = {
-                    navController.navigate(NavRoutes.FAVORITES)
                 }
             )
         }

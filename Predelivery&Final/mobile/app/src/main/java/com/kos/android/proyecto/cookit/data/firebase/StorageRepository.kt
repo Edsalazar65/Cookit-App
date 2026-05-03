@@ -42,6 +42,7 @@ class StorageRepository @javax.inject.Inject constructor() : IStorageRepository 
 
     // Referencia a la carpeta de imágenes de recetas
     private val recipeImagesRef = storage.reference.child("recipe_images")
+    private val profileImagesRef = storage.reference.child("avatars")
 
     /**
      * Sube una imagen generada a Firebase Storage
@@ -131,6 +132,20 @@ class StorageRepository @javax.inject.Inject constructor() : IStorageRepository 
         } catch (e: Exception) {
             // Si no existe, no es un error crítico
             Result.success(Unit)
+        }
+    }
+
+    override suspend fun uploadProfilePicture(userId: String, bitmap: Bitmap): Result<String> {
+        return try {
+            val imageRef = profileImagesRef.child("$userId.jpg")
+            val baos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+            val imageData = baos.toByteArray()
+            imageRef.putBytes(imageData).await()
+            val downloadUrl = imageRef.downloadUrl.await().toString()
+            Result.success(downloadUrl)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

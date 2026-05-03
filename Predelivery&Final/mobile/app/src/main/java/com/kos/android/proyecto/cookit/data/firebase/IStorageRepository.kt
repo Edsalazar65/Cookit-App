@@ -44,4 +44,12 @@ interface IStorageRepository {
      * @return Result indicando éxito o error
      */
     suspend fun deleteRecipeImage(recipeId: String): Result<Unit>
+
+    /**
+     * Sube una foto de perfil
+     * @param userId ID del usuario
+     * @param bitmap Imagen a subir
+     * @return URL de descarga
+     */
+    suspend fun uploadProfilePicture(userId: String, bitmap: Bitmap): Result<String>
 }

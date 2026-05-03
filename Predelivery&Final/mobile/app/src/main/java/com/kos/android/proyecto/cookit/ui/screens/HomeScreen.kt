@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kos.android.proyecto.cookit.domain.model.Recipe
+import com.kos.android.proyecto.cookit.ui.components.CookitBottomNavigation
+import com.kos.android.proyecto.cookit.ui.components.CookitScreen
 import com.kos.android.proyecto.cookit.ui.viewmodel.ChefViewModel
 
 
@@ -35,6 +37,7 @@ fun HomeScreen(
     onLogout: () -> Unit
 ) {
     val recipes by viewModel.recipes.collectAsStateWithLifecycle()
+    val userData by viewModel.userData.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -60,31 +63,14 @@ fun HomeScreen(
             )
         },
         bottomBar = {
-                NavigationBar(containerColor = Color.White) {
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Home, null) },
-                        selected = true,
-                        onClick = { },
-                        colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF388E3C))
-                    )
-                    // 2. AGREGAMOS EL BOTÓN DE EXPLORAR AQUÍ
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Explore, null) },
-                        selected = false,
-                        onClick = onNavigateToExplore
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Favorite, null) },
-                        selected = false,
-                        onClick = onNavigateToFavorites
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Person, null) },
-                        selected = false,
-                        onClick = { onNavigateToProfile() }
-                    )
-                }
-            },
+            CookitBottomNavigation(
+                currentScreen = CookitScreen.HOME,
+                onNavigateToHome = { },
+                onNavigateToExplore = onNavigateToExplore,
+                onNavigateToFavorites = onNavigateToFavorites,
+                onNavigateToProfile = onNavigateToProfile
+            )
+        },
 
         floatingActionButton = {
             FloatingActionButton(
@@ -131,69 +117,18 @@ fun HomeScreen(
                 userScrollEnabled = true
             ) {
                 items(items = recipes, key = { it.id }) { recipe ->
-                    RecipeCardItem(
+                    val isFavorite = userData?.favorites?.contains(recipe.id) == true
+                    val isSaved = userData?.myRecipes?.contains(recipe.id) == true
+
+                    RecipeCard(
                         recipe = recipe,
-                        onClick = { onNavigateToDetail(recipe.id) }
+                        isFavorite = isFavorite,
+                        isSaved = isSaved,
+                        onRecipeClick = { id -> onNavigateToDetail(id) },
+                        onFavoriteClick = { r -> viewModel.toggleFavorite(r.id) },
+                        onSaveClick = { r -> viewModel.toggleSaveRecipe(r.id) }
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun RecipeCardItem(
-    recipe: Recipe,
-    onClick: () -> Unit
-) {
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 12.dp)
-    ) {
-
-        Card(
-            onClick = onClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .padding(end = 12.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Box(modifier = Modifier.fillMaxSize().background(Color.LightGray)) {
-
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(bottom = 20.dp),
-                    color = Color(0xFFFFD180).copy(alpha = 0.9f),
-                    shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
-                ) {
-                    Text(
-                        text = recipe.name,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF5D4037)
-                    )
-                }
-            }
-        }
-
-        Surface(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .size(54.dp)
-                .offset(x = (0).dp, y = (8).dp),
-            shape = CircleShape,
-            color = Color(0xFF000000),
-            shadowElevation = 8.dp,
-            onClick = { /* Acción chat */ }
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("🐭", fontSize = 28.sp)
             }
         }
     }

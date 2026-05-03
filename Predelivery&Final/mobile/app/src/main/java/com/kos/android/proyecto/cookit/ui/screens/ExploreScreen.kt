@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kos.android.proyecto.cookit.domain.model.Recipe
+import com.kos.android.proyecto.cookit.ui.components.CookitBottomNavigation
+import com.kos.android.proyecto.cookit.ui.components.CookitScreen
 import com.kos.android.proyecto.cookit.ui.viewmodel.ChefViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +33,7 @@ fun ExploreScreen(
     onNavigateToProfile: () -> Unit
 ) {
     val recipes by viewModel.publicRecipes.collectAsStateWithLifecycle()
+    val userData by viewModel.userData.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = Color(0xFFFDF5E6),
@@ -41,29 +44,13 @@ fun ExploreScreen(
             )
         },
         bottomBar = {
-            NavigationBar(containerColor = Color.White) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, null) },
-                    selected = false,
-                    onClick = onNavigateToHome
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Explore, null) },
-                    selected = true, // Aquí Explorar está seleccionado
-                    onClick = { },
-                    colors = NavigationBarItemDefaults.colors(selectedIconColor = Color(0xFF388E3C))
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Favorite, null) },
-                    selected = false,
-                    onClick = onNavigateToFavorites
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Person, null) },
-                    selected = false,
-                    onClick = onNavigateToProfile
-                )
-            }
+            CookitBottomNavigation(
+                currentScreen = CookitScreen.EXPLORE,
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToExplore = { },
+                onNavigateToFavorites = onNavigateToFavorites,
+                onNavigateToProfile = onNavigateToProfile
+            )
         }
     ) { paddingValues ->
         if (recipes.isEmpty()) {
@@ -81,11 +68,16 @@ fun ExploreScreen(
                     .padding(paddingValues)
             ) {
                 items(recipes) { recipe ->
+                    val isFavorite = userData?.favorites?.contains(recipe.id) == true
+                    val isSaved = userData?.myRecipes?.contains(recipe.id) == true
+
                     RecipeCard(
                         recipe = recipe,
+                        isFavorite = isFavorite,
+                        isSaved = isSaved,
                         onRecipeClick = { id -> onNavigateToRecipeDetail(id) },
-                        onFavoriteClick = { /* TODO */ },
-                        onSaveClick = { /* TODO */ }
+                        onFavoriteClick = { r -> viewModel.toggleFavorite(r.id) },
+                        onSaveClick = { r -> viewModel.toggleSaveRecipe(r.id) }
                     )
                 }
             }

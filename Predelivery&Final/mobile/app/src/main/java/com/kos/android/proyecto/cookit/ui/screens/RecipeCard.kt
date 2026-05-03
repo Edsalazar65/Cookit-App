@@ -3,13 +3,16 @@ package com.kos.android.proyecto.cookit.ui.screens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
@@ -21,6 +24,8 @@ import com.kos.android.proyecto.cookit.R
 @Composable
 fun RecipeCard(
     recipe: Recipe,
+    isFavorite: Boolean = false,
+    isSaved: Boolean = false,
     onRecipeClick: (String) -> Unit,
     onFavoriteClick: (Recipe) -> Unit,
     onSaveClick: (Recipe) -> Unit
@@ -79,14 +84,16 @@ fun RecipeCard(
                 ) {
                     IconButton(onClick = { onFavoriteClick(recipe) }) {
                         Icon(
-                            imageVector = Icons.Default.FavoriteBorder,
-                            contentDescription = "Agregar a Favoritos"
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = if (isFavorite) "Quitar de Favoritos" else "Agregar a Favoritos",
+                            tint = if (isFavorite) Color(0xFFD32F2F) else LocalContentColor.current
                         )
                     }
                     IconButton(onClick = { onSaveClick(recipe) }) {
                         Icon(
-                            imageVector = Icons.Default.BookmarkBorder,
-                            contentDescription = "Guardar Receta"
+                            imageVector = if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = if (isSaved) "Quitar de Guardados" else "Guardar Receta",
+                            tint = if (isSaved) Color(0xFF388E3C) else LocalContentColor.current
                         )
                     }
                 }

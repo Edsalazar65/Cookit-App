@@ -29,6 +29,7 @@ data class Recipe(
                 ingredients = (data["ingredients"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                 steps = (data["steps"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                 imageURL = data["imageURL"] as? String ?: "",
+                difficulty = data["difficulty"] as? String ?: ""
             )
         }
     }
