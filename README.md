@@ -16,5 +16,5 @@ Repository for the Android Cookit app.
 ## Pre-delivery
 **Link del video:** https://youtu.be/_mqz_UPdye0
 
-## Pre-delivery
+## Final delivery
 **Link del video:** https://youtu.be/MHDMGjnUiA0
