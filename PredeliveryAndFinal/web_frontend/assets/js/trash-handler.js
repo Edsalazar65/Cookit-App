@@ -20,11 +20,11 @@ function renderRow(id, name, ingCount) {
   row.innerHTML = `
     <div>
       <strong>${escapeHtml(name)}</strong>
-      <div style="font-size:0.85em;color:#666;">${ingCount} ingredientes</div>
+      <div style="font-size:0.85em;color:#666;">${ingCount} ingredients</div>
     </div>
     <div style="display:flex;gap:8px;">
-      <button type="button" class="button primary trash-restore" data-id="${escapeHtml(id)}"><i class="fa-solid fa-rotate-left"></i> Restaurar</button>
-      <button type="button" class="button trash-perma" data-id="${escapeHtml(id)}" style="background:#c62828;"><i class="fa-solid fa-ban"></i> Eliminar</button>
+      <button type="button" class="button primary trash-restore" data-id="${escapeHtml(id)}"><i class="fa-solid fa-rotate-left"></i> Restore</button>
+      <button type="button" class="button trash-perma" data-id="${escapeHtml(id)}" style="background:#c62828;"><i class="fa-solid fa-ban"></i> Delete</button>
     </div>
   `;
   return row;
@@ -67,19 +67,19 @@ onAuthStateChanged(auth, (user) => {
     snap.forEach((d) => {
       const data = d.data();
       const ings = data.ingredients || [];
-      const row = renderRow(d.id, data.name || "(sin nombre)", Array.isArray(ings) ? ings.length : 0);
+      const row = renderRow(d.id, data.name || "(Untitled)", Array.isArray(ings) ? ings.length : 0);
       trashList.appendChild(row);
     });
 
     trashList.querySelectorAll(".trash-restore").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const id = btn.getAttribute("data-id");
-        if (!confirm("¿Restaurar esta receta al recetario público?")) return;
+        if (!confirm("Restore this recipe to the public cookbook?")) return;
         try {
           await restoreRecipe(id);
         } catch (e) {
           console.error(e);
-          alert("No se pudo restaurar.");
+          alert("Could not restore.");
         }
       });
     });
@@ -87,12 +87,12 @@ onAuthStateChanged(auth, (user) => {
     trashList.querySelectorAll(".trash-perma").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const id = btn.getAttribute("data-id");
-        if (!confirm("¿Eliminar permanentemente? Esta acción no se puede deshacer.")) return;
+        if (!confirm("Delete permanently? This cannot be undone.")) return;
         try {
           await permanentDelete(id);
         } catch (e) {
           console.error(e);
-          alert("No se pudo eliminar.");
+          alert("Could not delete.");
         }
       });
     });

@@ -24,7 +24,7 @@ loginForm.addEventListener("submit", async (e) => {
     await signInWithEmailAndPassword(auth, email, pass);
     window.location.href = "index.html";
   } catch (error) {
-    alert("Error al iniciar sesión. Verifica tus credenciales o regístrate.");
+    alert("Could not sign in. Check your email and password or sign up.");
   }
 });
 
@@ -39,11 +39,11 @@ googleBtn.addEventListener("click", async () => {
 
     if (!docSnap.exists()) {
       
-      await signOut(auth); // Cerramos su sesión inmediatamente
+      await signOut(auth);
       alert(
-        "No encontramos tu cuenta. Por favor, ve a Sign Up para registrarte.",
+        "No account found. Please use Sign Up to register first.",
       );
-      return; // Detenemos el código para que no viaje al index.html
+      return;
     }
     window.location.href = "index.html";
   } catch (error) {

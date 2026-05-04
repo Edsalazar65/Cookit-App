@@ -13,7 +13,7 @@ async function loadRecipe() {
   const recipeId = urlParams.get("id");
 
   if (!recipeId) {
-    console.error("No se encontró un ID en la URL");
+    console.error("No recipe id in URL");
     return;
   }
 
@@ -50,6 +50,6 @@ async function loadRecipe() {
 
     }
   } catch (error) {
-    console.error("Error al obtener la receta:", error);
+    console.error("loadRecipe error:", error);
   }
 }

@@ -20,7 +20,7 @@ signupForm.addEventListener("submit", async (e) => {
   const name = document.getElementById("signup-name").value;
 
   if (pass !== confirmPass) {
-    alert("Las contrasenas no coinciden");
+    alert("Passwords do not match.");
     return;
   }
 
@@ -37,7 +37,7 @@ signupForm.addEventListener("submit", async (e) => {
     });
     window.location.href = "index.html";
   } catch (error) {
-    alert("Error al crear cuenta" + error.message);
+    alert("Could not create account: " + error.message);
   }
 });
 
@@ -63,6 +63,6 @@ googleBtn.addEventListener("click", async () => {
 
     window.location.href = "index.html";
   } catch (error) {
-    console.error("Error al hacer Sign Up con Google", error);
+    console.error("Google sign-up error:", error);
   }
 });

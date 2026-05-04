@@ -93,7 +93,7 @@ confirmCropBtn.addEventListener('click', async () => {
 
         } catch (error) {
             console.error("Error al subir la imagen: ", error);
-            alert("Hubo un error al subir la foto de perfil.");
+            alert("Could not upload profile photo.");
         } finally {
             confirmCropBtn.innerText = originalText;
             confirmCropBtn.disabled = false;
@@ -125,7 +125,7 @@ onAuthStateChanged(auth, async (user) => {
 
             const trashLink = document.getElementById("admin-trash-link");
             if (trashLink) {
-                trashLink.style.display = user.email === ADMIN_EMAIL ? "inline-block" : "none";
+                trashLink.style.display = user.email === ADMIN_EMAIL ? "inline-flex" : "none";
             }
 
             if (userData.photoURL != "") {

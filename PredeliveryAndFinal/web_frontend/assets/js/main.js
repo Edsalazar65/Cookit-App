@@ -16,13 +16,25 @@ import {
 
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
+function escapeHtml(text) {
+  if (text == null) return "";
+  const d = document.createElement("div");
+  d.textContent = text;
+  return d.innerHTML;
+}
+
+function scrollChatToBottom() {
+  const el = document.getElementById("messages");
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
 const $inventoryModal = $("#inventory-modal");
 const $inventoryList = $("#inventory-list");
 const $newIngInput = $("#new-ingredient");
 
 const $recipeList = $("#recipeList");
 
-/** Entradas para la vista actual (home o explore): filtrado como en Android. */
+/** Cached list entries for home/explore filtering. */
 let recipeListCache = [];
 let userInventoryList = [];
 
@@ -138,8 +150,15 @@ $(document).ready(function () {
   const savedchat = sessionStorage.getItem("remy_chat");
   if (savedchat && window.location.pathname.includes("index.html")) {
     $messagesContainer.html(savedchat);
-    $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
+    scrollChatToBottom();
   }
+
+  $("#chat-reset-btn").on("click", () => {
+    if (!confirm("Clear all messages in this chat?")) return;
+    $messagesContainer.empty();
+    sessionStorage.removeItem("remy_chat");
+    scrollChatToBottom();
+  });
   let currentUserId = null;
 
   window.filterRecipes = function () {
@@ -161,7 +180,7 @@ $(document).ready(function () {
       }
     } else {
       currentUserId = null;
-      console.warn("No hay usuario detectado. Remy no podrá ver el inventario.");
+      console.warn("No signed-in user; Remy cannot see your pantry.");
       if (
         path.includes("explore.html") ||
         path.includes("index.html") ||
@@ -175,7 +194,7 @@ $(document).ready(function () {
 
   $("#open-inventory-btn").on("click", () => {
     if (!auth.currentUser) {
-      alert("Inicia sesión para gestionar tu inventario 🐭");
+      alert("Sign in to manage your pantry.");
       return;
     }
     $inventoryModal.fadeIn(200);
@@ -209,13 +228,14 @@ $(document).ready(function () {
 
     $messagesContainer.append(`
         <div class="user-message" style="margin-bottom: 15px; text-align: right;">
-            <strong style="color: #ed7d31;">Tú:</strong> 
-            <p style="background: #fff3e0; display: inline-block; padding: 8px 12px; border-radius: 10px; margin: 0;">${message}</p>
+            <strong style="color: #ed7d31;">You:</strong> 
+            <p style="background: #fff3e0; display: inline-block; padding: 8px 12px; border-radius: 10px; margin: 0;">${escapeHtml(message)}</p>
         </div>
     `);
 
-    const $loading = $(`<div class="bot-message" style="margin-bottom: 15px;"><strong>Remy:</strong> <em> Preparando... 🐭🍳</em></div>`);
+    const $loading = $(`<div class="bot-message" style="margin-bottom: 15px;"><strong>Remy:</strong> <em>Getting ready... 🐭🍳</em></div>`);
     $messagesContainer.append($loading);
+    scrollChatToBottom();
 
     try {
       let userInventory = [];
@@ -228,23 +248,23 @@ $(document).ready(function () {
       }
 
       const enrichedPrompt = `
-        Eres Remy, un chef experto. El usuario te dice: "${message}".
-        
-        Inventario actual del usuario: [${userInventory.join(", ")}].
-        
-        Si el usuario te pide crear o inventar una receta, debes responder ÚNICAMENTE con un objeto JSON (sin texto adicional, sin formato markdown). El JSON DEBE tener esta estructura exacta (Este es un ejemplo de receta):
+        You are Remy, an expert chef. The user says: "${message}".
+
+        User pantry / inventory: [${userInventory.join(", ")}].
+
+        If the user asks you to create or invent a recipe, respond ONLY with a JSON object (no extra text, no markdown fences). The JSON MUST follow this exact shape (example recipe):
         {
-            "name": "Baos de carne",
-            "ingredients": ["Pan bao", "Mayonesa", "Pepino", "Zanahoria", "Cebolla roja", "Carne de cerdo picada", "Mani", "Salsa de soya", "Sriracha"],
-            "steps": ["Corta los vegetales", "En un bowl, agrega el pepino, la zanahoria, la cebolla, el vinagre de vino tinto y la sal para encurtir.", "En un bol pequeño, mezcla la mayonesa y la sriracha. Con la base de un cazo, aplasta los cacahuetes en su propia bolsa para picarlos. Añade la mitad de los cacahuetes picados al bol con las verduras encurtidas.", "En una sartén, calienta un chorrito de aceite a fuego medio-alto. Agrega la carne picada de cerdo, salpimienta y cocina 4-5 min, desmenuzando con una espátula, hasta que se dore. Agrega la salsa de soja dulce y un chorrito de agua y cocina 1-2 min más, hasta que reduzca y la carne quede melosa.", "Coloca los panes bao en un plato, sin que se toquen entre ellos, y calienta en el microondas entre 40 y 60 segundos a máxima potencia, hasta que queden tiernos y esponjosos.", "En el interior de cada pan bao, agrega carne picada, zanahoria rallada y cebolla encurtida al gusto. Añade encima mayonesa de sriracha y cacahuetes picados. Sirve los encurtidos restantes a un lado como acompañamiento."],
-            "difficulty": "Baja",
-            "imagePrompt": "Un prompt detallado y fotorrealista para generar una imagen de esta receta. Ejemplo: 'A close-up photograph of steamed bao buns filled with glazed minced pork, pickled cucumber, and carrots, topped with chopped peanuts and sriracha mayo, served on a ceramic plate, cinematic lighting'."
+            "name": "Pork baos",
+            "ingredients": ["Bao buns", "Mayonnaise", "Cucumber", "Carrot", "Red onion", "Ground pork", "Peanuts", "Soy sauce", "Sriracha"],
+            "steps": ["Prep vegetables.", "Pickle cucumber, carrot, onion with vinegar and salt.", "Mix mayo and sriracha; crush peanuts.", "Cook pork with soy until glazed.", "Steam bao buns.", "Fill buns with pork, veg, sauces and peanuts."],
+            "difficulty": "Low",
+            "imagePrompt": "A detailed photorealistic prompt to generate an image of this dish, e.g. close-up of steamed bao buns with glazed pork and pickles, cinematic lighting."
         }
 
-        Puedes añadir ingredientes o no incluir algunos del inventario segun sea necesario para la receta
-        La dificultad puede ser Alta, Media o Baja
-        
-        Si el usuario te hace una pregunta normal (no pide crear receta), responde como un chef amigable en texto normal.
+        You may use pantry items or omit some as needed for the recipe.
+        Difficulty must be one of: High, Medium, Low.
+
+        If the user asks a normal question (not to create a recipe), reply as a friendly chef in plain text.
         `;
 
       const response = await fetch("/api/chat", {
@@ -255,7 +275,7 @@ $(document).ready(function () {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.text || "Error en el servidor");
+        throw new Error(errorData.text || "Server error");
       }
 
       const data = await response.json();
@@ -276,9 +296,9 @@ $(document).ready(function () {
               recipeData = JSON.parse(cleaned);
             }
 
-            const $imgLoading = $(`<div class="bot-message" style="margin-bottom: 15px; color: #757575;"><em>Creando el plato...</em></div>`);
+            const $imgLoading = $(`<div class="bot-message" style="margin-bottom: 15px; color: #757575;"><em>Plating the dish...</em></div>`);
             $messagesContainer.append($imgLoading);
-            $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
+            scrollChatToBottom();
 
             let finalImageURL = "images/placeholder.png";
 
@@ -310,7 +330,7 @@ $(document).ready(function () {
                 finalImageURL = await getDownloadURL(storageRef);
               }
             } catch (imgError) {
-              console.error("Error al generar o subir la imagen:", imgError);
+              console.error("Image generate/upload error:", imgError);
             }
 
             $imgLoading.remove();
@@ -319,13 +339,13 @@ $(document).ready(function () {
 
             await addDoc(collection(db, "public_recipes"), recipeData);
 
-            botReply = `¡Voilà! He creado una nueva receta usando lo que tienes en tu despensa: **${recipeData.name}**. La he guardado en el recetario principal con su foto para que puedas verla. 🐭✨`;
+            botReply = `Voilà! I created a new recipe using your pantry: **${recipeData.name}**. It's saved to the public cookbook with its photo. 🐭✨`;
 
             loadPublicRecipes();
           }
         }
       } catch (e) {
-        console.error("Error procesando el JSON de Remy:", e);
+        console.error("Remy JSON parse error:", e);
       }
 
       $messagesContainer.append(`
@@ -334,7 +354,7 @@ $(document).ready(function () {
                 <p style="background: #e8f5e9; display: inline-block; padding: 8px 12px; border-radius: 10px; margin: 0;">${botReply}</p>
             </div>
         `);
-      $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
+      scrollChatToBottom();
       sessionStorage.setItem("remy_chat", $messagesContainer.html());
     } catch (error) {
       $loading.remove();
@@ -361,7 +381,7 @@ async function renderInventory() {
     const items = userDoc.data().inventory;
 
     if (items.length === 0) {
-      $inventoryList.html("<p style='color:gray; font-size:0.8em;'>Tu despensa está vacía.</p>");
+      $inventoryList.html("<p style='color:gray; font-size:0.8em;'>Your pantry is empty.</p>");
       return;
     }
 
@@ -413,7 +433,7 @@ async function loadPublicRecipes() {
     });
     applyRecipeFilters();
   } catch (error) {
-    console.error("Error al cargar recetas:", error);
+    console.error("loadPublicRecipes error:", error);
   }
 }
 
@@ -437,16 +457,16 @@ async function moveRecipeToTrash(recipeId) {
 
 async function toggleFavorite(recipeId, isCurrentlyFav, $btn) {
   const user = auth.currentUser;
-  if (!user) return alert("Inicia sesión.");
+  if (!user) return alert("Sign in to continue.");
 
   const userRef = doc(db, "users", user.uid);
   try {
     if (isCurrentlyFav) {
       await updateDoc(userRef, { favorites: arrayRemove(recipeId) });
-      $btn.removeClass("active").html('<i class="fa-regular fa-star"></i> Añadir');
+      $btn.removeClass("active").html('<i class="fa-regular fa-star"></i> Add');
     } else {
       await updateDoc(userRef, { favorites: arrayUnion(recipeId) });
-      $btn.addClass("active").html('<i class="fa-solid fa-star"></i> Favorito');
+      $btn.addClass("active").html('<i class="fa-solid fa-star"></i> Favorite');
     }
     sessionStorage.removeItem(`favorites_${auth.currentUser.uid}`);
     const entry = recipeListCache.find((e) => e.id === recipeId);
@@ -463,16 +483,16 @@ async function toggleFavorite(recipeId, isCurrentlyFav, $btn) {
 
 async function toggleSaveRecipe(recipeId, isCurrentlySaved, $btn) {
   const user = auth.currentUser;
-  if (!user) return alert("Inicia sesión.");
+  if (!user) return alert("Sign in to continue.");
 
   const userRef = doc(db, "users", user.uid);
   try {
     if (isCurrentlySaved) {
       await updateDoc(userRef, { myRecipes: arrayRemove(recipeId) });
-      $btn.removeClass("active").html('<i class="fa-regular fa-bookmark"></i> Guardar');
+      $btn.removeClass("active").html('<i class="fa-regular fa-bookmark"></i> Save');
     } else {
       await updateDoc(userRef, { myRecipes: arrayUnion(recipeId) });
-      $btn.addClass("active").html('<i class="fa-solid fa-bookmark"></i> Guardada');
+      $btn.addClass("active").html('<i class="fa-solid fa-bookmark"></i> Saved');
     }
     invalidateRecipeCaches(auth.currentUser.uid);
     const entry = recipeListCache.find((e) => e.id === recipeId);
@@ -489,7 +509,7 @@ function getRecipeCardHTML(recipeId, recipe, isFav, isSaved, options = {}) {
   const saveIcon = isSaved ? "fa-solid" : "fa-regular";
 
   const adminBtn = showAdminDelete
-    ? `<button type="button" class="admin-trash-recipe-btn action-btn" data-id="${recipeId}" title="Mover a papelera"><i class="fa-solid fa-trash"></i></button>`
+    ? `<button type="button" class="admin-trash-recipe-btn action-btn" data-id="${recipeId}" title="Move to trash"><i class="fa-solid fa-trash"></i></button>`
     : "";
 
   return `
@@ -500,7 +520,7 @@ function getRecipeCardHTML(recipeId, recipe, isFav, isSaved, options = {}) {
                 <span class="recipe-title">${recipe.name}</span>
             </div>
             <div class="ingredients-box">
-                <h3>Ingredientes</h3>
+                <h3>Ingredients</h3>
                 <ul>
                     ${(recipe.ingredients || [])
                       .slice(0, 5)
@@ -509,14 +529,14 @@ function getRecipeCardHTML(recipeId, recipe, isFav, isSaved, options = {}) {
                 </ul>
                 <div class="card-actions" style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
                     <button class="toggle-fav-btn action-btn ${isFav ? "active" : ""}" 
-                            data-id="${recipeId}" title="Favoritos">
+                            data-id="${recipeId}" title="Favorites">
                         <i class="${favIcon} fa-star"></i>
-                        <span>${isFav ? "Favorito" : "Añadir"}</span>
+                        <span>${isFav ? "Favorite" : "Add"}</span>
                     </button>
                     <button class="toggle-save-btn action-btn ${isSaved ? "active" : ""}" 
-                            data-id="${recipeId}" title="Guardar">
+                            data-id="${recipeId}" title="Save to my recipes">
                         <i class="${saveIcon} fa-bookmark"></i>
-                        <span>${isSaved ? "Guardado" : "Guardar"}</span>
+                        <span>${isSaved ? "Saved" : "Save"}</span>
                     </button>
                     ${adminBtn}
                 </div>
@@ -575,7 +595,7 @@ async function loadMyRecipes() {
     persistMyRecipesCache(user.uid);
     applyRecipeFilters();
   } catch (e) {
-    console.error("Error cargando mis recetas:", e);
+    console.error("loadMyRecipes error:", e);
   }
 }
 
@@ -601,7 +621,7 @@ function assignCardEvents() {
 
   $(".admin-trash-recipe-btn").off("click").on("click", function (event) {
     event.stopPropagation();
-    if (!confirm("¿Mover esta receta a la papelera?")) return;
+    if (!confirm("Move this recipe to trash?")) return;
     const id = $(this).data("id");
     moveRecipeToTrash(id);
   });
@@ -641,14 +661,14 @@ export async function loadFavorites() {
       assignCardEvents();
     }
   } catch (error) {
-    console.error("Error al cargar favoritos:", error);
+    console.error("loadFavorites error:", error);
   }
 }
 
 async function addToFavorites(recipeId) {
   const user = auth.currentUser;
   if (!user) {
-    alert("Debes iniciar sesión para guardar favoritos.");
+    alert("Sign in to save favorites.");
     return;
   }
 
@@ -657,16 +677,16 @@ async function addToFavorites(recipeId) {
     await updateDoc(userRef, {
       favorites: arrayUnion(recipeId),
     });
-    alert("¡Receta añadida a tus favoritos! ⭐");
+    alert("Recipe added to favorites! ⭐");
   } catch (error) {
-    console.error("Error al guardar favorito:", error);
+    console.error("addToFavorites error:", error);
   }
 }
 
 async function removeFromFavorites(recipeId) {
   const user = auth.currentUser;
   if (!user) {
-    alert("Debes iniciar sesión para guardar favoritos.");
+    alert("Sign in to manage favorites.");
     return;
   }
 
@@ -676,10 +696,10 @@ async function removeFromFavorites(recipeId) {
       favorites: arrayRemove(recipeId),
     });
 
-    alert("Receta eliminada de favoritos.");
+    alert("Recipe removed from favorites.");
     loadFavorites();
   } catch (error) {
-    console.error("Error al eliminar de favoritos:", error);
-    alert("No se pudo eliminar la receta.");
+    console.error("Remove favorite error:", error);
+    alert("Could not remove the recipe.");
   }
 }

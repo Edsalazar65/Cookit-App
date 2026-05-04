@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 
 <head>
-  <title>Cookit-App | Papelera</title>
+  <title>Cookit-App | Trash</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -15,7 +15,7 @@
     <nav id="header" class="floating-nav">
       <a href="index.html"><button class="button1">HOME</button></a>
       <a href="explore.html"><button class="button3" style="background-color: gray;">EXPLORE</button></a>
-      <a href="add-recipe.html"><button class="button3" type="button">+ RECETA</button></a>
+      <a href="add-recipe.html"><button class="button3" type="button" title="Add recipe">+ RECIPE</button></a>
       <a href="favorites.html"><button class="button2">FAVORITES</button></a>
       <a href="profile.html"><button class="button3">PROFILE</button></a>
     </nav>
@@ -24,11 +24,11 @@
       <div class="container" style="max-width: 720px; margin: 0 auto;">
         <div style="margin: 2rem 0 1rem; display: flex; align-items: center; gap: 12px;">
           <a href="profile.html" class="button alt" style="padding: 0.4rem 0.8rem;"><i class="fa-solid fa-arrow-left"></i></a>
-          <h2 style="margin: 0;"><i class="fa-solid fa-trash" style="color: #5d4037;"></i> Papelera</h2>
+          <h2 style="margin: 0;"><i class="fa-solid fa-trash" style="color: #5d4037;"></i> Trash</h2>
         </div>
-        <p style="color: #666; margin-bottom: 1.5rem;">Solo administradores. Restaurar devuelve la receta al recetario público.</p>
+        <p style="color: #666; margin-bottom: 1.5rem;">Administrators only. Restoring sends the recipe back to the public cookbook.</p>
         <div id="trash-list"></div>
-        <p id="trash-empty" style="display: none; text-align: center; color: #888; padding: 2rem;">La papelera está vacía.</p>
+        <p id="trash-empty" style="display: none; text-align: center; color: #888; padding: 2rem;">Trash is empty.</p>
       </div>
     </main>
 

@@ -2287,8 +2287,142 @@ body.homepage #header h1 {
 
 }
 
+.search-toolbar {
+	position: relative;
+	z-index: auto;
+	margin-bottom: 1.5rem;
+	padding: 14px 18px;
+	background: #ffffff;
+	border-radius: 18px;
+	box-shadow: 0 4px 20px rgba(93, 64, 55, 0.1);
+}
+
+.search-toolbar .search-container {
+	margin-bottom: 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+}
+
 .search-container {
 	margin-bottom: 30px;
+}
+
+.recipe-list-section {
+	position: relative;
+	z-index: auto;
+	margin-top: 0;
+}
+
+/*
+ * El grid del tema (.row.gtr-150) usa margin-top: -60px para compensar el padding
+ * interno de las celdas. Si hay una fila previa (buscador), ese margen negativo
+ * sube el contenido y tapa el buscador y el título.
+ */
+.row.gtr-150.stack-after-toolbar {
+	margin-top: 0;
+}
+
+/* Chat with Remy — altura fija, scroll interno, no alarga la página */
+.sidebar-widget.chat-widget {
+	display: flex;
+	flex-direction: column;
+	max-height: min(480px, calc(100vh - 200px));
+	min-height: 260px;
+	width: 100%;
+	box-sizing: border-box;
+	background: #e3d5a1;
+	border-radius: 30px;
+	padding: 14px 14px 12px;
+	overflow: hidden;
+}
+
+.chat-header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	flex-shrink: 0;
+	margin-bottom: 10px;
+	padding: 0 4px;
+}
+
+.chat-header-title {
+	font-weight: 700;
+	color: #5d4037;
+	font-size: 0.95rem;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.chat-reset-btn {
+	flex-shrink: 0;
+	font-size: 0.65rem;
+	text-transform: uppercase;
+	font-weight: 700;
+	padding: 6px 12px;
+	border-radius: 999px;
+	border: 2px solid #5d4037;
+	background: #fff;
+	color: #5d4037;
+	cursor: pointer;
+	transition: background 0.2s, color 0.2s;
+}
+
+.chat-reset-btn:hover {
+	background: #5d4037;
+	color: #fff;
+}
+
+.chat-messages-container {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	-webkit-overflow-scrolling: touch;
+	padding: 8px 6px;
+	background: rgba(255, 255, 255, 0.35);
+	border-radius: 16px;
+	margin-bottom: 10px;
+}
+
+.chat-widget .chat-input-group {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-shrink: 0;
+	width: 100%;
+	box-sizing: border-box;
+	padding-top: 4px;
+}
+
+.chat-widget .chat-input-group input[type="text"] {
+	flex: 1;
+	min-width: 0;
+	border-radius: 20px;
+	border: none;
+	padding: 10px 14px;
+	background: #b1b1b1;
+	color: #fff;
+}
+
+.chat-widget .chat-input-group input[type="text"]::placeholder {
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.chat-widget .chat-input-group .button {
+	flex-shrink: 0;
+	padding: 10px 14px !important;
+	width: auto !important;
+	display: inline-flex !important;
+	line-height: 1 !important;
+}
+
+/* Perfil: misma causa que gtr-150 — sin margen negativo bajo el bloque superior */
+.profile-container > .row.gtr-50 {
+	margin-top: 0;
 }
 
 #recipeSearch {
@@ -2365,32 +2499,113 @@ body.homepage #header h1 {
 	padding: 5px 15px;
 }
 
-.floating-nav {
+body {
+	padding-top: 0;
+}
+
+/* Nav flotante Cookit (id header hereda reglas legacy del tema; las anulamos abajo) */
+nav#header.floating-nav {
 	position: fixed !important;
 	top: 0;
 	left: 0;
+	right: 0;
 	width: 100%;
+	max-width: 100vw;
+	box-sizing: border-box;
 	z-index: 10000;
-	background-color: #f9d291;
-	padding: 10px 0;
+	margin: 0 !important;
+	min-height: 0 !important;
+	height: auto !important;
+	background-color: #f9d291 !important;
+	background-image: none !important;
+	background-attachment: scroll !important;
+	padding: 10px 12px !important;
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: center;
-	gap: 20px;
-	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+	align-items: center;
+	gap: 10px 12px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
-body {
-	padding-top: 80px;
+nav#header.floating-nav:before,
+nav#header.floating-nav:after {
+	display: none !important;
+	content: none !important;
 }
 
-.floating-nav button,
-.button1 {
+/* El tema pone #header { color: #fff }; la barra Cookit debe ser legible */
+nav#header.floating-nav,
+nav#header.floating-nav a {
+	color: #333 !important;
+	text-align: center;
+}
+
+.floating-nav > a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	text-decoration: none;
+}
+
+body.homepage nav#header.floating-nav {
+	padding: 10px 12px !important;
+	min-height: 0 !important;
+}
+
+/* Hueco bajo la nav: suficiente para 1–2 filas de botones + notch */
+body.homepage {
+	padding-top: calc(env(safe-area-inset-top, 0px) + clamp(4.25rem, 11vw, 5.5rem));
+}
+
+@media screen and (max-width: 980px) {
+	body.homepage {
+		padding-top: calc(env(safe-area-inset-top, 0px) + clamp(5rem, 18vw, 7rem));
+	}
+}
+
+@media screen and (max-width: 736px) {
+	body.homepage {
+		padding-top: calc(env(safe-area-inset-top, 0px) + clamp(6rem, 28vw, 9rem));
+	}
+
+	nav#header.floating-nav {
+		padding: 10px 8px !important;
+		gap: 8px;
+		row-gap: 8px;
+		justify-content: center;
+	}
+}
+
+/* Botones de la nav: anula tema móvil que fuerza width:100% en todos los button */
+.floating-nav button {
+	width: auto !important;
+	max-width: none !important;
+	display: inline-block !important;
+	line-height: 1.25 !important;
+	padding: 7px 14px !important;
+	min-height: 0;
+	font-size: clamp(0.58rem, 2.5vw, 0.75rem);
 	border-radius: 20px !important;
-	padding: 5px 25px !important;
 	text-transform: uppercase;
 	font-weight: bold;
 	border: 2px solid #333 !important;
 	cursor: pointer;
+}
+
+/* Solo botones con clase del tema dentro de la nav (evita estilar todos los .button1 del sitio) */
+.floating-nav .button1 {
+	border-radius: 20px !important;
+	padding: 7px 14px !important;
+	text-transform: uppercase;
+	font-weight: bold;
+	border: 2px solid #333 !important;
+	cursor: pointer;
+	width: auto !important;
+	display: inline-block !important;
+	line-height: 1.25 !important;
+	font-size: clamp(0.58rem, 2.5vw, 0.75rem);
 }
 
 
@@ -2626,8 +2841,44 @@ body {
 }
 
 /* Botón de Log Out */
+.profile-page-main {
+	padding-top: 0.5rem;
+	padding-bottom: 3rem;
+}
+
+.profile-tagline {
+	color: #757575;
+	font-size: 0.95rem;
+	margin: 0.5rem 0 0 0;
+	font-style: italic;
+}
+
+.profile-stats-full {
+	max-width: 520px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.stats-grid-three {
+	flex-wrap: wrap;
+	gap: 1rem 2rem;
+	justify-content: center;
+}
+
 .profile-actions {
-	margin-top: 30px;
+	margin-top: 2rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+}
+
+.profile-trash-btn {
+	display: none;
+	max-width: 280px;
+	justify-content: center;
+	gap: 8px;
+	align-items: center;
 }
 
 .logout-btn {
@@ -2899,4 +3150,243 @@ body {
 /* Para el icono de favoritos activo */
 .toggle-fav-btn.active i {
 	color: #f1c40f;
+}
+
+@media screen and (max-width: 736px) {
+	.sidebar-widget.chat-widget {
+		max-height: min(420px, 58vh);
+	}
+	.chat-widget .chat-input-group button,
+	.chat-widget .chat-input-group .button {
+		width: auto !important;
+		display: inline-flex !important;
+	}
+}
+
+/* —— Nueva receta (alineado con flujo bajo la nav) —— */
+.add-recipe-main {
+	padding-top: 2.25rem;
+	padding-bottom: 4rem;
+}
+
+.add-recipe-main .container.add-recipe-inner {
+	max-width: 520px;
+	margin: 0 auto;
+}
+
+.add-recipe-header {
+	margin-top: 0.5rem;
+	margin-bottom: 1.75rem;
+	text-align: center;
+}
+
+.add-recipe-header h2 {
+	margin: 0 0 0.35rem 0;
+	font-size: 1.65rem;
+	color: #5d4037;
+}
+
+.ar-photo-zone {
+	position: relative;
+	width: 100%;
+	min-height: 200px;
+	border-radius: 16px;
+	background: #eceff1;
+	overflow: hidden;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px dashed #bdbdbd;
+	transition: border-color 0.2s, background 0.2s;
+}
+
+.ar-photo-zone:hover {
+	border-color: #ed7d31;
+	background: #faf6f0;
+}
+
+.ar-photo-zone.has-image {
+	border-style: solid;
+	border-color: transparent;
+	cursor: default;
+	padding: 0;
+}
+
+.ar-photo-zone input[type="file"] {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	cursor: pointer;
+	z-index: 2;
+}
+
+.ar-photo-zone.has-image input[type="file"] {
+	cursor: default;
+}
+
+.ar-photo-placeholder {
+	text-align: center;
+	color: #757575;
+	padding: 1rem;
+	pointer-events: none;
+}
+
+.ar-photo-placeholder i {
+	font-size: 2.5rem;
+	display: block;
+	margin-bottom: 0.5rem;
+	color: #9e9e9e;
+}
+
+.ar-photo-preview {
+	width: 100%;
+	height: 220px;
+	object-fit: cover;
+	display: block;
+	pointer-events: none;
+}
+
+.ar-field {
+	margin-bottom: 1.25rem;
+}
+
+.ar-field label,
+.ar-section-title {
+	display: block;
+	font-weight: 600;
+	color: #5d4037;
+	margin-bottom: 0.5rem;
+	font-size: 0.95rem;
+}
+
+.ar-field input[type="text"],
+.ar-field select {
+	width: 100%;
+	padding: 0.65rem 0.85rem;
+	border-radius: 12px;
+	border: 1px solid #e0e0e0;
+	box-sizing: border-box;
+}
+
+.ar-diff-row {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.ar-diff-chip {
+	flex: 1;
+	min-width: 88px;
+	padding: 0.55rem 0.5rem;
+	border-radius: 999px;
+	border: 2px solid #d7ccc8;
+	background: #fff;
+	cursor: pointer;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: #5d4037;
+	transition: background 0.2s, border-color 0.2s;
+}
+
+.ar-diff-chip:hover {
+	border-color: #ed7d31;
+}
+
+.ar-diff-chip.selected {
+	background: #fff3e0;
+	border-color: #ed7d31;
+	color: #e65100;
+}
+
+.ar-add-row {
+	display: flex;
+	gap: 10px;
+	align-items: stretch;
+	margin-bottom: 0.75rem;
+}
+
+.ar-add-row input[type="text"] {
+	flex: 1;
+	padding: 0.65rem 0.85rem;
+	border-radius: 12px;
+	border: 1px solid #e0e0e0;
+}
+
+.ar-add-btn {
+	flex-shrink: 0;
+	min-width: 48px;
+	border: none;
+	border-radius: 12px;
+	background: #388e3c;
+	color: #fff;
+	cursor: pointer;
+	font-size: 1.25rem;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.2s;
+}
+
+.ar-add-btn:hover {
+	background: #2e7d32;
+}
+
+.ar-item-list {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 0.5rem 0;
+}
+
+ol.ar-steps-list {
+	list-style: none;
+	padding: 0;
+	margin: 0 0 0.5rem 0;
+	margin-left: 0;
+}
+
+.ar-item-list li {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 0.5rem 0.65rem;
+	margin-bottom: 6px;
+	background: #fafafa;
+	border-radius: 10px;
+	border: 1px solid #eee;
+	font-size: 0.95rem;
+}
+
+.ar-item-list li .ar-item-num {
+	font-weight: 700;
+	color: #ed7d31;
+	min-width: 1.5rem;
+}
+
+.ar-item-list li .ar-item-text {
+	flex: 1;
+	color: #424242;
+}
+
+.ar-item-remove {
+	border: none;
+	background: transparent;
+	color: #9e9e9e;
+	cursor: pointer;
+	padding: 4px;
+	border-radius: 6px;
+	line-height: 1;
+}
+
+.ar-item-remove:hover {
+	color: #c62828;
+	background: #ffebee;
+}
+
+.add-recipe-form-card {
+	background: #fff;
+	border-radius: 20px;
+	padding: 1.75rem 1.5rem;
+	box-shadow: 0 8px 32px rgba(93, 64, 55, 0.08);
 }
