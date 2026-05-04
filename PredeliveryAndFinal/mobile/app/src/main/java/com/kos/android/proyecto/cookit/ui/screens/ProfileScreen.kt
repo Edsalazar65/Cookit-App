@@ -209,19 +209,6 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            InfoCard(title = "Account Settings") {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    SettingItem(label = "Notifications", value = "ON")
-                    SettingItem(label = "Account Privacy", value = "Public")
-                    SettingItem(label = "Language", value = "ES")
-                }
-            }
-
             if (isAdmin) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
@@ -312,17 +299,5 @@ private fun StatItem(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, fontWeight = FontWeight.Bold, fontSize = 26.sp, color = Color.Black)
         Text(label, fontSize = 10.sp, color = Color.Gray)
-    }
-}
-
-@Composable
-private fun SettingItem(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, fontSize = 14.sp, color = Color.Gray)
-        Text(value, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Color.Black)
     }
 }
