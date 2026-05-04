@@ -8,6 +8,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,8 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +33,7 @@ import com.kos.android.proyecto.cookit.ui.components.CookitBottomNavigation
 import com.kos.android.proyecto.cookit.ui.components.CookitScreen
 import com.kos.android.proyecto.cookit.ui.viewmodel.ChefViewModel
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileScreen(
     viewModel: ChefViewModel,
@@ -39,11 +41,15 @@ fun ProfileScreen(
     onNavigateToExplore: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToAddRecipe: () -> Unit,
+    onNavigateToTrash: () -> Unit,
     onLogout: () -> Unit
 ) {
     val userData by viewModel.userData.collectAsStateWithLifecycle()
-    val favoriteRecipes by viewModel.favoriteRecipes.collectAsStateWithLifecycle()
+    val isAdmin by viewModel.isAdmin.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    
+    var showAddIngredientDialog by remember { mutableStateOf(false) }
+    var newIngredientName by remember { mutableStateOf("") }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -148,19 +154,64 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            InfoCard(title = "My Stats") {
+            InfoCard(title = "My Culinary Stats") {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    StatItem(value = favoriteRecipes.size.toString(), label = "FAVORITES")
-                    StatItem(value = "5", label = "FRIENDS")
+                    StatItem(value = (userData?.myRecipes?.size ?: 0).toString(), label = "RECIPES")
+                    StatItem(value = (userData?.favorites?.size ?: 0).toString(), label = "FAVORITES")
+                    StatItem(value = (userData?.inventory?.size ?: 0).toString(), label = "INGREDIENTS")
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            InfoCard(title = "Settings") {
+            InfoCard(title = "My Pantry") {
+                if (userData?.inventory.isNullOrEmpty()) {
+                    Text(
+                        "Your pantry is empty.",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 16.dp),
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        userData?.inventory?.forEach { ingredient ->
+                            AssistChip(
+                                onClick = { viewModel.removeIngredient(ingredient) },
+                                label = { Text(ingredient, fontSize = 11.sp) },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = Color.White.copy(alpha = 0.7f),
+                                    labelColor = Color(0xFF5D4037)
+                                ),
+                                border = null,
+                                trailingIcon = { Icon(Icons.Default.Close, null, modifier = Modifier.size(12.dp)) },
+                                modifier = Modifier.padding(horizontal = 4.dp)
+                            )
+                        }
+                    }
+                }
+                
+                TextButton(
+                    onClick = { showAddIngredientDialog = true },
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Add Ingredient", fontSize = 12.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            InfoCard(title = "Account Settings") {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -168,6 +219,22 @@ fun ProfileScreen(
                     SettingItem(label = "Notifications", value = "ON")
                     SettingItem(label = "Account Privacy", value = "Public")
                     SettingItem(label = "Language", value = "ES")
+                }
+            }
+
+            if (isAdmin) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = onNavigateToTrash,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(45.dp),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5D4037))
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("OPEN TRASH BIN", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
 
@@ -191,6 +258,34 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
         }
+    }
+
+    if (showAddIngredientDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddIngredientDialog = false },
+            title = { Text("Add Ingredient") },
+            text = {
+                TextField(
+                    value = newIngredientName,
+                    onValueChange = { newIngredientName = it },
+                    placeholder = { Text("e.g. Tomato") }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.addIngredient(newIngredientName)
+                    newIngredientName = ""
+                    showAddIngredientDialog = false
+                }) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddIngredientDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

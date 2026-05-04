@@ -1,5 +1,6 @@
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { auth, db, storage } from "./firebase-init.js";
+import { ADMIN_EMAIL } from "./constants.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
@@ -112,6 +113,20 @@ onAuthStateChanged(auth, async (user) => {
             const firstName = rawName.trim().split(" ")[0];
             nameDisplay.textContent = `Chef ${firstName}`;
 
+            const myR = userData.myRecipes || [];
+            const fav = userData.favorites || [];
+            const inv = userData.inventory || [];
+            const elR = document.getElementById("stat-recipes");
+            const elF = document.getElementById("stat-favorites");
+            const elI = document.getElementById("stat-ingredients");
+            if (elR) elR.textContent = String(myR.length);
+            if (elF) elF.textContent = String(fav.length);
+            if (elI) elI.textContent = String(inv.length);
+
+            const trashLink = document.getElementById("admin-trash-link");
+            if (trashLink) {
+                trashLink.style.display = user.email === ADMIN_EMAIL ? "inline-block" : "none";
+            }
 
             if (userData.photoURL != "") {
                 profileAvatar.src = userData.photoURL;

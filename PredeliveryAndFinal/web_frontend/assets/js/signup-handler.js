@@ -56,6 +56,7 @@ googleBtn.addEventListener("click", async () => {
         inventory: [],
         myRecipes: [],
         favorites: [],
+        photoURL: "",
       },
       { merge: true },
     );

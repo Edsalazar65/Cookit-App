@@ -27,7 +27,8 @@ fun RecipeCard(
     isSaved: Boolean = false,
     onRecipeClick: (String) -> Unit,
     onFavoriteClick: (Recipe) -> Unit,
-    onSaveClick: (Recipe) -> Unit
+    onSaveClick: (Recipe) -> Unit,
+    onDeleteClick: ((Recipe) -> Unit)? = null
 ) {
     Card(
         onClick = { onRecipeClick(recipe.id) },
@@ -89,6 +90,16 @@ fun RecipeCard(
                     )
                     
                     Row {
+                        if (onDeleteClick != null) {
+                            IconButton(onClick = { onDeleteClick(recipe) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Eliminar receta",
+                                    tint = Color.Red,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
                         IconButton(onClick = { onFavoriteClick(recipe) }) {
                             Icon(
                                 imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,

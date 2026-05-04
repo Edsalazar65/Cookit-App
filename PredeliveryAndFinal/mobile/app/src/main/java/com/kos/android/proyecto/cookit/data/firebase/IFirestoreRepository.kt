@@ -9,5 +9,15 @@ interface IFirestoreRepository {
 
     suspend fun saveRecipe(recipe: Recipe): Result<String>
 
+    suspend fun updateRecipeImageUrl(recipeId: String, imageUrl: String): Result<Unit>
+
     suspend fun deleteRecipe(recipeId: String): Result<Unit>
+
+    fun observeTrashedRecipes(): Flow<List<Recipe>>
+
+    suspend fun moveToTrash(recipe: Recipe): Result<Unit>
+
+    suspend fun restoreFromTrash(recipe: Recipe): Result<Unit>
+
+    suspend fun permanentDelete(recipeId: String): Result<Unit>
 }

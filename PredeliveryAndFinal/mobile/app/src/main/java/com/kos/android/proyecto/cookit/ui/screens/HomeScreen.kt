@@ -19,17 +19,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kos.android.proyecto.cookit.domain.model.Recipe
+import com.kos.android.proyecto.cookit.ui.components.ChatPopup
 import com.kos.android.proyecto.cookit.ui.components.CookitBottomNavigation
 import com.kos.android.proyecto.cookit.ui.components.CookitScreen
+import com.kos.android.proyecto.cookit.ui.components.NotificationHost
 import com.kos.android.proyecto.cookit.ui.viewmodel.ChefViewModel
+import com.kos.android.proyecto.cookit.ui.viewmodel.ChatViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: ChefViewModel,
+    chatViewModel: ChatViewModel = hiltViewModel(),
     onNavigateToGenerator: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToAddRecipe: () -> Unit,
@@ -42,9 +47,17 @@ fun HomeScreen(
     val userData by viewModel.userData.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val filterByInventory by viewModel.filterByInventory.collectAsStateWithLifecycle()
+    val isAdmin by viewModel.isAdmin.collectAsStateWithLifecycle()
+    val notifications by viewModel.notifications.collectAsStateWithLifecycle()
+
+    var showChat by remember { mutableStateOf(false) }
+    val chatMessages by chatViewModel.messages.collectAsStateWithLifecycle()
+    val isChatLoading by chatViewModel.isLoading.collectAsStateWithLifecycle()
 
     var showAddIngredientDialog by remember { mutableStateOf(false) }
     var newIngredientName by remember { mutableStateOf("") }
+    
+    var recipeToDelete by remember { mutableStateOf<Recipe?>(null) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -82,7 +95,7 @@ fun HomeScreen(
 
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {},
+                onClick = { showChat = true },
                 containerColor = Color(0xFFA6A6A6),
                 contentColor = Color.White,
                 shape = CircleShape
@@ -194,13 +207,51 @@ fun HomeScreen(
                             isSaved = isSaved,
                             onRecipeClick = { id -> onNavigateToDetail(id) },
                             onFavoriteClick = { r -> viewModel.toggleFavorite(r.id) },
-                            onSaveClick = { r -> viewModel.toggleSaveRecipe(r.id) }
+                            onSaveClick = { r -> viewModel.toggleSaveRecipe(r.id) },
+                            onDeleteClick = if (isAdmin) { r -> recipeToDelete = r } else null
                         )
                     }
                 }
             }
         }
     }
+
+    if (showChat) {
+        ChatPopup(
+            messages = chatMessages,
+            isLoading = isChatLoading,
+            onSendMessage = { message ->
+                chatViewModel.sendMessage(message, userData?.inventory ?: emptyList())
+            },
+            onDismiss = { showChat = false }
+        )
+    }
+
+    if (recipeToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { recipeToDelete = null },
+            title = { Text("Delete Recipe") },
+            text = { Text("Are you sure you want to move this recipe to trash bin?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val r = recipeToDelete
+                    if (r != null) {
+                        viewModel.deleteRecipe(r)
+                    }
+                    recipeToDelete = null
+                }) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { recipeToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    NotificationHost(notifications = notifications)
 
     if (showAddIngredientDialog) {
         AlertDialog(

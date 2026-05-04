@@ -46,8 +46,17 @@ interface IAiLogicDataSource {
      * Genera una imagen del plato terminado
      * @param recipeTitle Título de la receta
      * @param ingredients Lista de ingredientes principales
+     * @param customPrompt Prompt opcional generado por la IA
      * @return Bitmap de la imagen generada
      * @throws Exception si la generación falla
      */
-    suspend fun generateRecipeImage(recipeTitle: String, ingredients: List<String>): Bitmap
+    suspend fun generateRecipeImage(recipeTitle: String, ingredients: List<String>, customPrompt: String? = null): Bitmap
+
+    /**
+     * Chat con el chef Remy
+     * @param message Mensaje del usuario
+     * @param inventory Contexto del inventario del usuario
+     * @return Respuesta del chef
+     */
+    suspend fun chatWithRemy(message: String, inventory: List<String>): String
 }

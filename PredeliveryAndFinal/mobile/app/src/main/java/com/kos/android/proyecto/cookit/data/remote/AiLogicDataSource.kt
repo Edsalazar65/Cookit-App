@@ -49,24 +49,22 @@ class AiLogicDataSource @javax.inject.Inject constructor() : IAiLogicDataSource 
      * La instancia del modelo se puede reutilizar para múltiples requests.
      */
     private val generativeModel = Firebase.ai(
-        backend = GenerativeBackend.googleAI()
-    ).generativeModel("gemini-3-flash-preview")
+        backend = GenerativeBackend.vertexAI()
+    ).generativeModel("gemini-1.5-flash")
 
     /**
      * Modelo para generación de imágenes
      *
      * CONCEPTO: Gemini Image Generation
-     * El modelo gemini-3-pro-image-preview puede generar imágenes
-     * a partir de descripciones de texto.
-     *
-     * IMPORTANTE: Se debe configurar responseModalities para incluir TEXT e IMAGE
+     * Se utiliza el modelo imagen-3.0-fast-generate-001 para la creación rápida
+     * de imágenes de platos.
      */
     private val imageModel = Firebase.ai(
-        backend = GenerativeBackend.googleAI()
+        backend = GenerativeBackend.vertexAI()
     ).generativeModel(
-        modelName = "gemini-3-pro-image-preview",
+        modelName = "imagen-3.0-fast-generate-001",
         generationConfig = generationConfig {
-            responseModalities = listOf(ResponseModality.TEXT, ResponseModality.IMAGE)
+            responseModalities = listOf(ResponseModality.IMAGE)
         }
     )
 
@@ -216,18 +214,15 @@ class AiLogicDataSource @javax.inject.Inject constructor() : IAiLogicDataSource 
      * @return Bitmap de la imagen generada del plato
      * @throws Exception si la generación falla o no se obtiene imagen
      */
-    override suspend fun generateRecipeImage(recipeTitle: String, ingredients: List<String>): Bitmap {
+    override suspend fun generateRecipeImage(recipeTitle: String, ingredients: List<String>, customPrompt: String?): Bitmap {
         // Limitamos a 5 ingredientes para no sobrecargar el prompt
         val ingredientsList = ingredients.take(5).joinToString(", ")
 
         // =====================================================================
         // PROMPT PARA GENERACIÓN DE IMAGEN
         // =====================================================================
-        // El prompt describe el tipo de imagen que queremos generar.
-        // Usamos inglés para mejor compatibilidad con el modelo.
         val prompt = content {
-            text(
-                """
+            text(customPrompt ?: """
                 Generate a professional food photography image of a finished dish:
 
                 Dish name: $recipeTitle
@@ -240,8 +235,7 @@ class AiLogicDataSource @javax.inject.Inject constructor() : IAiLogicDataSource 
                 - Top-down or 45-degree angle view
                 - Clean, elegant presentation
                 - High quality, restaurant-style presentation
-                """.trimIndent()
-            )
+            """.trimIndent())
         }
 
         // Generar contenido con el modelo de imagen
@@ -271,5 +265,36 @@ class AiLogicDataSource @javax.inject.Inject constructor() : IAiLogicDataSource 
             ?: throw Exception("No se pudo generar la imagen")
 
         return bitmap
+    }
+
+    override suspend fun chatWithRemy(message: String, inventory: List<String>): String {
+        val inventoryContext = if (inventory.isNotEmpty()) {
+            "Inventario actual del usuario: [${inventory.joinToString(", ")}]."
+        } else ""
+
+        val prompt = content {
+            text("""
+                Eres Remy, un chef experto y apasionado. 
+                Dices palabras en francés como 'Oui', 'Mon ami' o 'Magnifique', pero no muy seguido. 
+                Siempre usas analogías culinarias. 
+                $inventoryContext
+                
+                Si el usuario te pide crear o inventar una receta, debes responder ÚNICAMENTE con el objeto JSON. NO uses bloques de código markdown (```json), NO añadidas texto antes o después. El JSON DEBE tener esta estructura exacta:
+                {
+                    "name": "Nombre de la receta",
+                    "ingredients": ["ingrediente 1", "ingrediente 2"],
+                    "steps": ["paso 1", "paso 2"],
+                    "difficulty": "Baja",
+                    "imagePrompt": "Un prompt detallado para generar la imagen de esta receta"
+                }
+                
+                Si el usuario te hace una pregunta normal (no pide crear receta), responde como un chef amigable en texto normal de forma breve.
+                
+                Usuario dice: $message
+            """.trimIndent())
+        }
+
+        val response = generativeModel.generateContent(prompt)
+        return response.text ?: "🐭 Ups, se me quemó la salsa. ¿Intentas de nuevo?"
     }
 }

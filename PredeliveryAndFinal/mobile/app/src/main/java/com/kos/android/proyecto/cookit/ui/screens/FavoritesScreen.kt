@@ -22,6 +22,7 @@ import coil.compose.AsyncImage
 import com.kos.android.proyecto.cookit.domain.model.Recipe
 import com.kos.android.proyecto.cookit.ui.components.CookitBottomNavigation
 import com.kos.android.proyecto.cookit.ui.components.CookitScreen
+import com.kos.android.proyecto.cookit.ui.components.NotificationHost
 import com.kos.android.proyecto.cookit.ui.viewmodel.ChefViewModel
 
 @Composable
@@ -35,6 +36,7 @@ fun FavoritesScreen(
 ) {
     val favoriteRecipes by viewModel.favoriteRecipes.collectAsStateWithLifecycle()
     val userData by viewModel.userData.collectAsStateWithLifecycle()
+    val notifications by viewModel.notifications.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = Color(0xFFFDF5E6),
@@ -89,6 +91,8 @@ fun FavoritesScreen(
                 }
             }
         }
+        
+        NotificationHost(notifications = notifications)
     }
 }
 

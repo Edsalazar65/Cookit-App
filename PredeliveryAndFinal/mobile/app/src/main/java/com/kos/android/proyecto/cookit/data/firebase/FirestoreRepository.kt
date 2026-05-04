@@ -13,6 +13,7 @@ class FirestoreRepository @Inject constructor() : IFirestoreRepository {
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
     private val publicRecipesCollection = firestore.collection("public_recipes")
+    private val trashedRecipesCollection = firestore.collection("trashed_recipes")
 
     override fun observePublicRecipes(): Flow<List<Recipe>> = callbackFlow {
         val listenerRegistration = publicRecipesCollection.addSnapshotListener { snapshot, error ->
@@ -36,12 +37,82 @@ class FirestoreRepository @Inject constructor() : IFirestoreRepository {
         awaitClose { listenerRegistration.remove() }
     }
 
+    override suspend fun updateRecipeImageUrl(recipeId: String, imageUrl: String): Result<Unit> {
+        return try {
+            publicRecipesCollection.document(recipeId).update("imageURL", imageUrl).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun deleteRecipe(recipeId: String): Result<Unit> {
         return try {
             publicRecipesCollection.document(recipeId).delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(Exception("Error eliminando receta: ${e.message}"))
+        }
+    }
+
+    override fun observeTrashedRecipes(): Flow<List<Recipe>> = callbackFlow {
+        val listenerRegistration = trashedRecipesCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(emptyList())
+                return@addSnapshotListener
+            }
+
+            val recipes = snapshot?.documents?.mapNotNull { document ->
+                try {
+                    val data = document.data ?: return@mapNotNull null
+                    Recipe.fromFirestore(document.id, data)
+                } catch (e: Exception) {
+                    null
+                }
+            } ?: emptyList()
+
+            trySend(recipes)
+        }
+
+        awaitClose { listenerRegistration.remove() }
+    }
+
+    override suspend fun moveToTrash(recipe: Recipe): Result<Unit> {
+        return try {
+            val batch = firestore.batch()
+            val publicRef = publicRecipesCollection.document(recipe.id)
+            val trashRef = trashedRecipesCollection.document(recipe.id)
+            
+            batch.set(trashRef, recipe.toMap())
+            batch.delete(publicRef)
+            batch.commit().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun restoreFromTrash(recipe: Recipe): Result<Unit> {
+        return try {
+            val batch = firestore.batch()
+            val publicRef = publicRecipesCollection.document(recipe.id)
+            val trashRef = trashedRecipesCollection.document(recipe.id)
+            
+            batch.set(publicRef, recipe.toMap())
+            batch.delete(trashRef)
+            batch.commit().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun permanentDelete(recipeId: String): Result<Unit> {
+        return try {
+            trashedRecipesCollection.document(recipeId).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

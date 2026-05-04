@@ -8,6 +8,7 @@
 	<link rel="stylesheet" href="assets/css/main.css" />
 	<link rel="icon" href="images/icon.png">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
 <body class="homepage is-preload">
@@ -16,8 +17,9 @@
 		<div id="header" class="floating-nav">
 			<a href="index.html"><button class="button1">HOME</button></a>
 			<a href="explore.html"><button class="button3" style="background-color: gray;">EXPLORE</button></a>
+			<a href="add-recipe.html"><button class="button3" type="button">+ RECETA</button></a>
 			<a href="favorites.html"><button class="button2">FAVORITES</button></a>
-			<a href="profile.html"><button class="button3">PROFILE</button></a>
+			<a href="profile.html"><button class="button3 active">PROFILE</button></a>
 		</div>
 
 		<div class="wrapper style2">
@@ -39,12 +41,16 @@
 								<h3>My Stats</h3>
 								<div class="stats-grid">
 									<div class="stat-item">
-										<span class="stat-value">12</span>
-										<span class="stat-label">Favorites</span>
+										<span class="stat-value" id="stat-recipes">0</span>
+										<span class="stat-label">Recetas</span>
 									</div>
 									<div class="stat-item">
-										<span class="stat-value">5</span>
-										<span class="stat-label">Friends</span>
+										<span class="stat-value" id="stat-favorites">0</span>
+										<span class="stat-label">Favoritos</span>
+									</div>
+									<div class="stat-item">
+										<span class="stat-value" id="stat-ingredients">0</span>
+										<span class="stat-label">Ingredientes</span>
 									</div>
 								</div>
 							</div>
@@ -62,7 +68,8 @@
 						</div>
 					</div>
 
-					<div class="profile-actions">
+					<div class="profile-actions" style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+						<a href="trash.html" id="admin-trash-link" class="button primary" style="display: none; max-width: 280px;"><i class="fa-solid fa-trash"></i> PAPELERA</a>
 						<a href="login.html" id="logout-btn"><button class="button logout-btn">LOG OUT</button></a>
 					</div>
 				</div>

@@ -1,6 +1,4 @@
 import { auth, db, storage } from "./firebase-init.js";
-import { ADMIN_EMAIL } from "./constants.js";
-export { ADMIN_EMAIL } from "./constants.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   arrayRemove,
@@ -10,8 +8,7 @@ import {
   doc,
   updateDoc,
   arrayUnion,
-  addDoc,
-  writeBatch,
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
@@ -21,115 +18,7 @@ const $inventoryList = $("#inventory-list");
 const $newIngInput = $("#new-ingredient");
 
 const $recipeList = $("#recipeList");
-
-/** Entradas para la vista actual (home o explore): filtrado como en Android. */
-let recipeListCache = [];
-let userInventoryList = [];
-
-function isExplorePage() {
-  return window.location.pathname.includes("explore.html");
-}
-
-function isAdminUser() {
-  return auth.currentUser?.email === ADMIN_EMAIL;
-}
-
-function recipeMatchesInventoryFilter(recipe, inventory, onlyInventory) {
-  if (!onlyInventory) return true;
-  const ings = recipe.ingredients || [];
-  if (ings.length === 0 || !inventory.length) return false;
-  return ings.some((ing) =>
-    inventory.some((stock) => stock.toLowerCase().includes(ing.toLowerCase())),
-  );
-}
-
-function getFilterQuery() {
-  const el = document.getElementById("recipeSearch");
-  return (el && el.value ? el.value : "").trim().toLowerCase();
-}
-
-function isInventoryFilterOn() {
-  const el = document.getElementById("filter-by-inventory");
-  return el ? el.checked : false;
-}
-
-function buildFilteredList() {
-  const q = getFilterQuery();
-  const invOnly = isInventoryFilterOn();
-  return recipeListCache.filter((entry) => {
-    const name = (entry.data.name || "").toLowerCase();
-    const matchesQ = !q || name.includes(q);
-    const matchesInv = recipeMatchesInventoryFilter(entry.data, userInventoryList, invOnly);
-    return matchesQ && matchesInv;
-  });
-}
-
-function updateFilterHint(filteredCount, totalCount) {
-  const hint = document.getElementById("filter-no-matches");
-  if (!hint) return;
-  if (totalCount > 0 && filteredCount === 0) {
-    hint.style.display = "block";
-  } else {
-    hint.style.display = "none";
-  }
-}
-
-export function applyRecipeFilters() {
-  if (!$recipeList.length) return;
-  const filtered = buildFilteredList();
-  $recipeList.empty();
-  const showDelete = isAdminUser();
-  for (const e of filtered) {
-    $recipeList.append(
-      getRecipeCardHTML(e.id, e.data, e.isFav, e.isSaved, { showAdminDelete: showDelete }),
-    );
-  }
-  const $emptyState = $("#empty-state");
-  if ($emptyState.length && !isExplorePage()) {
-    if (recipeListCache.length === 0) {
-      $emptyState.show();
-    } else {
-      $emptyState.hide();
-    }
-  }
-  const exploreEmpty = document.getElementById("explore-empty");
-  if (exploreEmpty) {
-    exploreEmpty.style.display = recipeListCache.length === 0 ? "block" : "none";
-  }
-  updateFilterHint(filtered.length, recipeListCache.length);
-  assignCardEvents();
-}
-
-async function syncUserInventoryFromFirebase() {
-  if (!auth.currentUser) {
-    userInventoryList = [];
-    return;
-  }
-  const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-  userInventoryList = userDoc.exists() ? userDoc.data().inventory || [] : [];
-}
-
-function persistMyRecipesCache(uid) {
-  try {
-    sessionStorage.setItem(`myRecipes_cache_v2_${uid}`, JSON.stringify(recipeListCache));
-  } catch (_) {}
-}
-
-function loadMyRecipesCacheFromSession(uid) {
-  try {
-    const raw = sessionStorage.getItem(`myRecipes_cache_v2_${uid}`);
-    if (!raw) return false;
-    recipeListCache = JSON.parse(raw);
-    return Array.isArray(recipeListCache);
-  } catch (_) {
-    return false;
-  }
-}
-
-function invalidateRecipeCaches(uid) {
-  sessionStorage.removeItem(`myRecipes_${uid}`);
-  sessionStorage.removeItem(`myRecipes_cache_v2_${uid}`);
-}
+const $favoriteList = $("#favorite-list");
 
 $(document).ready(function () {
   const $userInput = $("#user-input");
@@ -142,35 +31,24 @@ $(document).ready(function () {
   }
   let currentUserId = null;
 
-  window.filterRecipes = function () {
-    applyRecipeFilters();
-  };
 
-  $(document).on("input", "#recipeSearch", applyRecipeFilters);
-  $(document).on("change", "#filter-by-inventory", applyRecipeFilters);
 
   onAuthStateChanged(auth, (user) => {
-    const path = window.location.pathname;
     if (user) {
       currentUserId = user.uid;
       console.log("Welcome, Chef! ID:", currentUserId);
-      if (path.includes("index.html") || path === "/" || path.endsWith("/")) {
+      if (window.location.pathname.includes("index.html") || window.location.pathname === "/") {
         loadMyRecipes();
-      } else if (path.includes("explore.html")) {
+      } else {
         loadPublicRecipes();
       }
     } else {
       currentUserId = null;
       console.warn("No hay usuario detectado. Remy no podrá ver el inventario.");
-      if (
-        path.includes("explore.html") ||
-        path.includes("index.html") ||
-        path === "/" ||
-        path.endsWith("/")
-      ) {
-        loadPublicRecipes();
-      }
+      loadPublicRecipes();
     }
+
+
   });
 
   $("#open-inventory-btn").on("click", () => {
@@ -184,6 +62,8 @@ $(document).ready(function () {
 
   $("#close-inventory").on("click", () => $inventoryModal.fadeOut(200));
 
+
+
   $("#add-ingredient-btn").on("click", async () => {
     const item = $newIngInput.val().trim();
     if (!item) return;
@@ -192,12 +72,8 @@ $(document).ready(function () {
       const userRef = doc(db, "users", auth.currentUser.uid);
       await updateDoc(userRef, { inventory: arrayUnion(item) });
       $newIngInput.val("");
-      await renderInventory();
-      await syncUserInventoryFromFirebase();
-      if ($recipeList.length) applyRecipeFilters();
-    } catch (e) {
-      console.error(e);
-    }
+      renderInventory();
+    } catch (e) { console.error(e); }
   });
 
   async function sendMessage() {
@@ -206,6 +82,7 @@ $(document).ready(function () {
 
     $sendBtn.prop("disabled", true);
     $userInput.val("");
+
 
     $messagesContainer.append(`
         <div class="user-message" style="margin-bottom: 15px; text-align: right;">
@@ -218,6 +95,7 @@ $(document).ready(function () {
     $messagesContainer.append($loading);
 
     try {
+
       let userInventory = [];
       if (currentUserId) {
         const userRef = doc(db, "users", currentUserId);
@@ -247,6 +125,7 @@ $(document).ready(function () {
         Si el usuario te hace una pregunta normal (no pide crear receta), responde como un chef amigable en texto normal.
         `;
 
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -260,49 +139,54 @@ $(document).ready(function () {
 
       const data = await response.json();
       $loading.remove();
+      let isRecipe = false;
 
       let botReply = data.text;
 
       try {
-        const start = botReply.indexOf("{");
-        const end = botReply.lastIndexOf("}");
+        const start = botReply.indexOf('{');
+        const end = botReply.lastIndexOf('}');
         if (start !== -1 && end !== -1) {
           const cleanJsonString = botReply.substring(start, end + 1);
-          let recipeData = JSON.parse(cleanJsonString);
+          const recipeData = JSON.parse(cleanJsonString);
 
           if (recipeData.name && recipeData.ingredients && recipeData.steps) {
+
             if (botReply.includes("{") && botReply.includes("name")) {
-              const cleaned = botReply.replace(/```json/g, "").replace(/```/g, "").trim();
-              recipeData = JSON.parse(cleaned);
+              const cleanJsonString = botReply.replace(/```json/g, "").replace(/```/g, "").trim();
+              const recipeData = JSON.parse(cleanJsonString);
             }
 
             const $imgLoading = $(`<div class="bot-message" style="margin-bottom: 15px; color: #757575;"><em>Creando el plato...</em></div>`);
             $messagesContainer.append($imgLoading);
             $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
 
-            let finalImageURL = "images/placeholder.png";
+            let finalImageURL = "images/placeholder.png"; // Imagen por defecto por si falla
 
             try {
+
               const imgRes = await fetch("/api/generate-image", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: recipeData.imagePrompt }),
+                body: JSON.stringify({ prompt: recipeData.imagePrompt })
               });
 
               const imgData = await imgRes.json();
 
               if (imgData.base64) {
+
                 const byteCharacters = atob(imgData.base64);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {
                   byteNumbers[i] = byteCharacters.charCodeAt(i);
                 }
                 const byteArray = new Uint8Array(byteNumbers);
-                const imageType = imgData.type || "image/png";
+                const imageType = imgData.type || 'image/png';
                 const blob = new Blob([byteArray], { type: imageType });
 
-                const fileExtension = imageType === "image/jpeg" ? "jpg" : "png";
-                const uniqueName = `recipes/${Date.now()}_${recipeData.name.replace(/\s+/g, "_")}.${fileExtension}`;
+
+                const fileExtension = imageType === 'image/jpeg' ? 'jpg' : 'png';
+                const uniqueName = `recipes/${Date.now()}_${recipeData.name.replace(/\s+/g, '_')}.${fileExtension}`;
                 const storageRef = ref(storage, uniqueName);
 
                 await uploadBytes(storageRef, blob);
@@ -315,7 +199,10 @@ $(document).ready(function () {
 
             $imgLoading.remove();
 
+
             recipeData.imageURL = finalImageURL;
+
+
 
             await addDoc(collection(db, "public_recipes"), recipeData);
 
@@ -336,6 +223,7 @@ $(document).ready(function () {
         `);
       $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
       sessionStorage.setItem("remy_chat", $messagesContainer.html());
+
     } catch (error) {
       $loading.remove();
       console.error("Error:", error);
@@ -344,12 +232,14 @@ $(document).ready(function () {
     }
   }
 
+  // EVENTOS
   $sendBtn.on("click", sendMessage);
 
   $userInput.on("keypress", (e) => {
     if (e.which === 13) sendMessage();
   });
 });
+
 
 async function renderInventory() {
   const userRef = doc(db, "users", auth.currentUser.uid);
@@ -365,7 +255,7 @@ async function renderInventory() {
       return;
     }
 
-    items.forEach((item) => {
+    items.forEach(item => {
       const chip = $(`
                 <div class="ingredient-chip">
                     <span>${item}</span>
@@ -375,20 +265,20 @@ async function renderInventory() {
       $inventoryList.append(chip);
     });
 
+
     $(".remove-chip").on("click", async function () {
       const name = $(this).data("name");
-      const userRefInner = doc(db, "users", auth.currentUser.uid);
-      await updateDoc(userRefInner, { inventory: arrayRemove(name) });
-      await renderInventory();
-      await syncUserInventoryFromFirebase();
-      if ($recipeList.length) applyRecipeFilters();
+      const userRef = doc(db, "users", auth.currentUser.uid);
+      await updateDoc(userRef, { inventory: arrayRemove(name) });
+      renderInventory();
     });
   }
 }
 
+
+
 async function loadPublicRecipes() {
   try {
-    await syncUserInventoryFromFirebase();
     let userFavorites = [];
     let userSavedRecipes = [];
 
@@ -401,38 +291,22 @@ async function loadPublicRecipes() {
     }
 
     const querySnapshot = await getDocs(collection(db, "public_recipes"));
-    recipeListCache = [];
+    $recipeList.empty();
+
     querySnapshot.forEach((docSnap) => {
       const recipeId = docSnap.id;
-      recipeListCache.push({
-        id: recipeId,
-        data: docSnap.data(),
-        isFav: userFavorites.includes(recipeId),
-        isSaved: userSavedRecipes.includes(recipeId),
-      });
+      const isFav = userFavorites.includes(recipeId);
+      const isSaved = userSavedRecipes.includes(recipeId);
+
+
+      const html = getRecipeCardHTML(recipeId, docSnap.data(), isFav, isSaved);
+      $recipeList.append(html);
     });
-    applyRecipeFilters();
+
+    assignCardEvents();
   } catch (error) {
     console.error("Error al cargar recetas:", error);
   }
-}
-
-async function moveRecipeToTrash(recipeId) {
-  if (!isAdminUser()) return;
-  const publicRef = doc(db, "public_recipes", recipeId);
-  const snap = await getDoc(publicRef);
-  if (!snap.exists()) return;
-  const data = snap.data();
-  const batch = writeBatch(db);
-  batch.set(doc(db, "trashed_recipes", recipeId), data);
-  batch.delete(publicRef);
-  await batch.commit();
-  if (auth.currentUser) {
-    sessionStorage.removeItem(`favorites_${auth.currentUser.uid}`);
-    invalidateRecipeCaches(auth.currentUser.uid);
-  }
-  if (isExplorePage()) await loadPublicRecipes();
-  else await loadMyRecipes();
 }
 
 async function toggleFavorite(recipeId, isCurrentlyFav, $btn) {
@@ -449,16 +323,7 @@ async function toggleFavorite(recipeId, isCurrentlyFav, $btn) {
       $btn.addClass("active").html('<i class="fa-solid fa-star"></i> Favorito');
     }
     sessionStorage.removeItem(`favorites_${auth.currentUser.uid}`);
-    const entry = recipeListCache.find((e) => e.id === recipeId);
-    if (entry) entry.isFav = !isCurrentlyFav;
-    if (window.location.pathname.includes("favorites.html")) {
-      await loadFavorites();
-    } else {
-      applyRecipeFilters();
-    }
-  } catch (e) {
-    console.error(e);
-  }
+  } catch (e) { console.error(e); }
 }
 
 async function toggleSaveRecipe(recipeId, isCurrentlySaved, $btn) {
@@ -474,51 +339,40 @@ async function toggleSaveRecipe(recipeId, isCurrentlySaved, $btn) {
       await updateDoc(userRef, { myRecipes: arrayUnion(recipeId) });
       $btn.addClass("active").html('<i class="fa-solid fa-bookmark"></i> Guardada');
     }
-    invalidateRecipeCaches(auth.currentUser.uid);
-    const entry = recipeListCache.find((e) => e.id === recipeId);
-    if (entry) entry.isSaved = !isCurrentlySaved;
-    applyRecipeFilters();
-  } catch (e) {
-    console.error(e);
-  }
+    sessionStorage.removeItem(`myRecipes_${auth.currentUser.uid}`);
+  } catch (e) { console.error(e); }
 }
 
-function getRecipeCardHTML(recipeId, recipe, isFav, isSaved, options = {}) {
-  const { showAdminDelete = false } = options;
-  const favIcon = isFav ? "fa-solid" : "fa-regular";
-  const saveIcon = isSaved ? "fa-solid" : "fa-regular";
 
-  const adminBtn = showAdminDelete
-    ? `<button type="button" class="admin-trash-recipe-btn action-btn" data-id="${recipeId}" title="Mover a papelera"><i class="fa-solid fa-trash"></i></button>`
-    : "";
+function getRecipeCardHTML(recipeId, recipe, isFav, isSaved) {
+
+  const favIcon = isFav ? 'fa-solid' : 'fa-regular';
+  const saveIcon = isSaved ? 'fa-solid' : 'fa-regular';
+  const difficultyClass = (recipe.difficulty || 'Baja').toLowerCase();
 
   return `
         <article data-id="${recipeId}" class="recipe-card">
             <div class="recipe-info">
-                <img src="${recipe.imageURL || "images/placeholder.png"}" alt="${recipe.name}" class="cardImage" />
+                <img src="${recipe.imageURL || 'images/placeholder.png'}" alt="${recipe.name}" class="cardImage" />
                 
                 <span class="recipe-title">${recipe.name}</span>
             </div>
             <div class="ingredients-box">
                 <h3>Ingredientes</h3>
                 <ul>
-                    ${(recipe.ingredients || [])
-                      .slice(0, 5)
-                      .map((ing) => `<li>${ing}</li>`)
-                      .join("")}
+                    ${(recipe.ingredients || []).slice(0, 5).map((ing) => `<li>${ing}</li>`).join("")}
                 </ul>
-                <div class="card-actions" style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-                    <button class="toggle-fav-btn action-btn ${isFav ? "active" : ""}" 
+                <div class="card-actions" style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="toggle-fav-btn action-btn ${isFav ? 'active' : ''}" 
                             data-id="${recipeId}" title="Favoritos">
                         <i class="${favIcon} fa-star"></i>
-                        <span>${isFav ? "Favorito" : "Añadir"}</span>
+                        <span>${isFav ? 'Favorito' : 'Añadir'}</span>
                     </button>
-                    <button class="toggle-save-btn action-btn ${isSaved ? "active" : ""}" 
+                    <button class="toggle-save-btn action-btn ${isSaved ? 'active' : ''}" 
                             data-id="${recipeId}" title="Guardar">
                         <i class="${saveIcon} fa-bookmark"></i>
-                        <span>${isSaved ? "Guardado" : "Guardar"}</span>
+                        <span>${isSaved ? 'Guardado' : 'Guardar'}</span>
                     </button>
-                    ${adminBtn}
                 </div>
             </div>
         </article>
@@ -528,13 +382,14 @@ function getRecipeCardHTML(recipeId, recipe, isFav, isSaved, options = {}) {
 async function loadMyRecipes() {
   const user = auth.currentUser;
   const $emptyState = $("#empty-state");
+  const $recipeList = $("#recipeList");
 
-  if (!user || !$recipeList.length) return;
+  if (!user) return;
 
-  await syncUserInventoryFromFirebase();
-
-  if (loadMyRecipesCacheFromSession(user.uid)) {
-    applyRecipeFilters();
+  const cachedRecipes = sessionStorage.getItem(`myRecipes_${user.uid}`);
+  if (cachedRecipes) {
+    $recipeList.html(cachedRecipes);
+    assignCardEvents();
     return;
   }
 
@@ -542,8 +397,9 @@ async function loadMyRecipes() {
     const userRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userRef);
 
-    recipeListCache = [];
+    $recipeList.empty();
 
+    // Verificamos si el documento existe ANTES de intentar leer sus datos
     if (!userDoc.exists()) {
       $emptyState.show();
       return;
@@ -563,21 +419,18 @@ async function loadMyRecipes() {
       const recipeSnap = await getDoc(doc(db, "public_recipes", id));
       if (recipeSnap.exists()) {
         const isFav = favoritesIDs.includes(id);
-        recipeListCache.push({
-          id,
-          data: recipeSnap.data(),
-          isFav,
-          isSaved: true,
-        });
+        const html = getRecipeCardHTML(id, recipeSnap.data(), isFav, true);
+        $recipeList.append(html);
       }
     }
 
-    persistMyRecipesCache(user.uid);
-    applyRecipeFilters();
+    sessionStorage.setItem(`myRecipes_${user.uid}`, $recipeList.html());
+    assignCardEvents();
   } catch (e) {
     console.error("Error cargando mis recetas:", e);
   }
 }
+
 
 function assignCardEvents() {
   $(".recipe-card").off("click").on("click", function () {
@@ -585,6 +438,7 @@ function assignCardEvents() {
     window.location.href = `recipe.html?id=${id}`;
   });
 
+  // Botón de Favoritos
   $(".toggle-fav-btn").off("click").on("click", function (event) {
     event.stopPropagation();
     const id = $(this).data("id");
@@ -592,18 +446,12 @@ function assignCardEvents() {
     toggleFavorite(id, isCurrentlyFav, $(this));
   });
 
+  // Botón de Guardar
   $(".toggle-save-btn").off("click").on("click", function (event) {
     event.stopPropagation();
     const id = $(this).data("id");
     const isCurrentlySaved = $(this).hasClass("active");
     toggleSaveRecipe(id, isCurrentlySaved, $(this));
-  });
-
-  $(".admin-trash-recipe-btn").off("click").on("click", function (event) {
-    event.stopPropagation();
-    if (!confirm("¿Mover esta receta a la papelera?")) return;
-    const id = $(this).data("id");
-    moveRecipeToTrash(id);
   });
 }
 
@@ -612,20 +460,18 @@ export async function loadFavorites() {
     const user = auth.currentUser;
     if (!user) return;
 
-    const $favoriteListContainer = $("#favorite-list");
-    if (!$favoriteListContainer.length) return;
-
     const cachedRecipes = sessionStorage.getItem(`favorites_${user.uid}`);
     if (cachedRecipes) {
-      $favoriteListContainer.html(cachedRecipes);
+      $recipeList.html(cachedRecipes);
       assignCardEvents();
       return;
-    }
+    };
 
     const userDoc = await getDoc(doc(db, "users", user.uid));
     if (userDoc.exists()) {
       const favoriteIDs = userDoc.data().favorites || [];
       const myRecipesIDs = userDoc.data().myRecipes || [];
+      const $favoriteListContainer = $("#favorite-list");
 
       $favoriteListContainer.empty();
 
@@ -633,11 +479,12 @@ export async function loadFavorites() {
         const recipeSnap = await getDoc(doc(db, "public_recipes", id));
         if (recipeSnap.exists()) {
           const isSaved = myRecipesIDs.includes(id);
-          const html = getRecipeCardHTML(id, recipeSnap.data(), true, isSaved, { showAdminDelete: false });
+
+          const html = getRecipeCardHTML(id, recipeSnap.data(), true, isSaved);
           $favoriteListContainer.append(html);
         }
       }
-      sessionStorage.setItem(`favorites_${user.uid}`, $favoriteListContainer.html());
+      sessionStorage.setItem(`favorites_${user.uid}`, $recipeList.html());
       assignCardEvents();
     }
   } catch (error) {
@@ -645,6 +492,7 @@ export async function loadFavorites() {
   }
 }
 
+//  Función para guardar en el array favorites del usuario
 async function addToFavorites(recipeId) {
   const user = auth.currentUser;
   if (!user) {
