@@ -4,10 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -30,16 +33,12 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             AiChefTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
+                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     AiChefNavigation()
                 }
             }
@@ -57,7 +56,6 @@ object NavRoutes {
     const val RECIPE_DETAIL = "recipe_detail/{recipeId}"
     const val PROFILE = "profile"
     const val TRASH = "trash"
-
     fun recipeDetail(recipeId: String) = "recipe_detail/$recipeId"
 }
 
@@ -65,116 +63,99 @@ object NavRoutes {
 fun AiChefNavigation() {
     val navController = rememberNavController()
     val viewModel: ChefViewModel = hiltViewModel()
-
     val authState by viewModel.authState.collectAsStateWithLifecycle()
 
-    // Este bloque asegura que el destino inicial sea dinámico pero estable
-    val startDestination = remember(authState) {
+    // Gestión inteligente de la navegación reactiva
+    LaunchedEffect(authState) {
         when (authState) {
-            is AuthState.Authenticated -> NavRoutes.HOME
-            is AuthState.Unauthenticated -> NavRoutes.AUTH
-            else -> NavRoutes.AUTH
-        }
-    }
-
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        composable(NavRoutes.AUTH) {
-            AuthScreen(
-                viewModel = viewModel,
-                onAuthSuccess = {
+            is AuthState.Authenticated -> {
+                if (navController.currentDestination?.route == NavRoutes.AUTH) {
                     navController.navigate(NavRoutes.HOME) {
                         popUpTo(NavRoutes.AUTH) { inclusive = true }
                     }
                 }
-            )
-        }
-
-        composable(NavRoutes.HOME) {
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToGenerator = { navController.navigate(NavRoutes.GENERATOR) },
-                onNavigateToDetail = { recipeId -> navController.navigate(NavRoutes.recipeDetail(recipeId)) },
-                onNavigateToFavorites = { navController.navigate(NavRoutes.FAVORITES) },
-                onNavigateToProfile = { navController.navigate(NavRoutes.PROFILE) },
-                onNavigateToExplore = { navController.navigate(NavRoutes.EXPLORE) },
-                onNavigateToAddRecipe = { navController.navigate(NavRoutes.ADD_RECIPE) },
-                onLogout = {
-                    viewModel.signOut()
+            }
+            is AuthState.Unauthenticated -> {
+                if (navController.currentDestination?.route != NavRoutes.AUTH) {
                     navController.navigate(NavRoutes.AUTH) {
                         popUpTo(0) { inclusive = true }
                     }
                 }
-            )
+            }
+            else -> {}
         }
-        
-        composable(NavRoutes.EXPLORE) {
-            ExploreScreen(
-                viewModel = viewModel,
-                onNavigateToRecipeDetail = { recipeId -> navController.navigate(NavRoutes.recipeDetail(recipeId)) },
-                onNavigateToFavorites = { navController.navigate(NavRoutes.FAVORITES) },
-                onNavigateToProfile = { navController.navigate(NavRoutes.PROFILE) },
-                onNavigateToHome = { navController.navigate(NavRoutes.HOME) },
-                onNavigateToAddRecipe = { navController.navigate(NavRoutes.ADD_RECIPE) }
-            )
-        }
+    }
 
-        composable(NavRoutes.FAVORITES) {
-            FavoritesScreen(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToProfile = { navController.navigate(NavRoutes.PROFILE) },
-                onNavigateToExplore = { navController.navigate(NavRoutes.EXPLORE) },
-                onNavigateToAddRecipe = { navController.navigate(NavRoutes.ADD_RECIPE) },
-                onNavigateToDetail = { recipeId -> navController.navigate(NavRoutes.recipeDetail(recipeId)) }
-            )
+    if (authState is AuthState.Loading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
         }
+    } else {
+        NavHost(
+            navController = navController,
+            startDestination = if (authState is AuthState.Authenticated) NavRoutes.HOME else NavRoutes.AUTH
+        ) {
+            composable(NavRoutes.AUTH) { AuthScreen(viewModel = viewModel, onAuthSuccess = {}) }
+            
+            composable(NavRoutes.HOME) {
+                HomeScreen(
+                    viewModel = viewModel,
+                    onNavigateToGenerator = { navController.navigate(NavRoutes.GENERATOR) },
+                    onNavigateToDetail = { id -> navController.navigate(NavRoutes.recipeDetail(id)) },
+                    onNavigateToFavorites = { navController.navigate(NavRoutes.FAVORITES) },
+                    onNavigateToProfile = { navController.navigate(NavRoutes.PROFILE) },
+                    onNavigateToExplore = { navController.navigate(NavRoutes.EXPLORE) },
+                    onNavigateToAddRecipe = { navController.navigate(NavRoutes.ADD_RECIPE) },
+                    onLogout = { viewModel.signOut() }
+                )
+            }
+            
+            composable(NavRoutes.EXPLORE) {
+                ExploreScreen(
+                    viewModel = viewModel,
+                    onNavigateToRecipeDetail = { id -> navController.navigate(NavRoutes.recipeDetail(id)) },
+                    onNavigateToFavorites = { navController.navigate(NavRoutes.FAVORITES) },
+                    onNavigateToProfile = { navController.navigate(NavRoutes.PROFILE) },
+                    onNavigateToHome = { navController.navigate(NavRoutes.HOME) },
+                    onNavigateToAddRecipe = { navController.navigate(NavRoutes.ADD_RECIPE) }
+                )
+            }
 
-        composable(NavRoutes.RECIPE_DETAIL) { backStackEntry ->
-            val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
-            RecipeDetailScreen(
-                viewModel = viewModel,
-                recipeId = recipeId,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
+            composable(NavRoutes.FAVORITES) {
+                FavoritesScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToProfile = { navController.navigate(NavRoutes.PROFILE) },
+                    onNavigateToExplore = { navController.navigate(NavRoutes.EXPLORE) },
+                    onNavigateToAddRecipe = { navController.navigate(NavRoutes.ADD_RECIPE) },
+                    onNavigateToDetail = { id -> navController.navigate(NavRoutes.recipeDetail(id)) }
+                )
+            }
 
-        composable(NavRoutes.ADD_RECIPE) {
-            AddRecipeScreen(
-                viewModel = viewModel,
-                onRecipeAdded = {
-                    navController.navigate(NavRoutes.HOME) {
-                        popUpTo(NavRoutes.HOME) { inclusive = true }
-                    }
-                },
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
+            composable(NavRoutes.RECIPE_DETAIL) { backStackEntry ->
+                val recipeId = backStackEntry.arguments?.getString("recipeId") ?: ""
+                RecipeDetailScreen(viewModel = viewModel, recipeId = recipeId, onNavigateBack = { navController.popBackStack() })
+            }
 
-        composable(NavRoutes.PROFILE) {
-            ProfileScreen(
-                viewModel = viewModel,
-                onNavigateToHome = { navController.navigate(NavRoutes.HOME) },
-                onNavigateToExplore = { navController.navigate(NavRoutes.EXPLORE) },
-                onNavigateToFavorites = { navController.navigate(NavRoutes.FAVORITES) },
-                onNavigateToAddRecipe = { navController.navigate(NavRoutes.ADD_RECIPE) },
-                onNavigateToTrash = { navController.navigate(NavRoutes.TRASH) },
-                onLogout = {
-                    viewModel.signOut()
-                    navController.navigate(NavRoutes.AUTH) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
+            composable(NavRoutes.ADD_RECIPE) {
+                AddRecipeScreen(viewModel = viewModel, onRecipeAdded = { navController.navigate(NavRoutes.HOME) { popUpTo(NavRoutes.HOME) { inclusive = true } } }, onNavigateBack = { navController.popBackStack() })
+            }
 
-        composable(NavRoutes.TRASH) {
-            TrashScreen(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() }
-            )
+            composable(NavRoutes.PROFILE) {
+                ProfileScreen(
+                    viewModel = viewModel,
+                    onNavigateToHome = { navController.navigate(NavRoutes.HOME) },
+                    onNavigateToExplore = { navController.navigate(NavRoutes.EXPLORE) },
+                    onNavigateToFavorites = { navController.navigate(NavRoutes.FAVORITES) },
+                    onNavigateToAddRecipe = { navController.navigate(NavRoutes.ADD_RECIPE) },
+                    onNavigateToTrash = { navController.navigate(NavRoutes.TRASH) },
+                    onLogout = { viewModel.signOut() }
+                )
+            }
+
+            composable(NavRoutes.TRASH) {
+                TrashScreen(viewModel = viewModel, onNavigateBack = { navController.popBackStack() })
+            }
         }
     }
 }

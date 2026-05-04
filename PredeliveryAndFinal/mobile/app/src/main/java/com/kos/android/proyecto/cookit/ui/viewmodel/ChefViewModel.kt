@@ -38,21 +38,49 @@ class ChefViewModel @Inject constructor(
     private val aiLogicDataSource: IAiLogicDataSource
 ) : ViewModel() {
 
+    // 1. Autenticación (Eager para persistencia inmediata)
     val authState: StateFlow<AuthState> = authRepository.observeAuthState()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = AuthState.Loading
-        )
+        .stateIn(viewModelScope, SharingStarted.Eagerly, AuthState.Loading)
 
     private val _authUiState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val authUiState: StateFlow<UiState<Unit>> = _authUiState.asStateFlow()
 
+    // 2. Datos del Usuario Reactivos
+    val userData: StateFlow<UserData?> = authState
+        .flatMapLatest { state ->
+            if (state is AuthState.Authenticated) {
+                Log.d("ChefViewModel", "Session detected for ${state.userId}. Fetching user data...")
+                userRepository.observeUserData(state.userId)
+            } else flowOf(null)
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    // 3. Permisos de Administrador (Dual)
+    val isAdmin: StateFlow<Boolean> = combine(authState, userData) { auth, user ->
+        val email = (auth as? AuthState.Authenticated)?.email ?: user?.email ?: ""
+        val result = email.lowercase() == "edgargameplay2@gmail.com" || email.lowercase() == "nikole1@gmail.com"
+        Log.d("ChefViewModel", "ADMIN STATUS FOR $email: $result")
+        result
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    // 4. Papelera Reactiva (Se activa por evento al detectar Admin)
+    val trashedRecipes: StateFlow<List<Recipe>> = isAdmin
+        .flatMapLatest { isAdm ->
+            if (isAdm) {
+                Log.d("ChefViewModel", "Admin Mode: Activating Trashed Recipes Listener")
+                firestoreRepository.observeTrashedRecipes()
+            } else {
+                Log.d("ChefViewModel", "Standard Mode: Clearing Trashed Recipes")
+                flowOf(emptyList())
+            }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    // 5. Notificaciones Apilables
+    private val _notifications = MutableStateFlow<List<CookitNotification>>(emptyList())
+    val notifications: StateFlow<List<CookitNotification>> = _notifications.asStateFlow()
+
+    // 6. Recetas y Búsqueda
     private val _publicRecipes = MutableStateFlow<List<Recipe>>(emptyList())
     val publicRecipes: StateFlow<List<Recipe>> = _publicRecipes.asStateFlow()
-
-    private val _trashedRecipes = MutableStateFlow<List<Recipe>>(emptyList())
-    val trashedRecipes: StateFlow<List<Recipe>> = _trashedRecipes.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -66,103 +94,42 @@ class ChefViewModel @Inject constructor(
     private val _filterExploreByInventory = MutableStateFlow(false)
     val filterExploreByInventory: StateFlow<Boolean> = _filterExploreByInventory.asStateFlow()
 
-    private val _notifications = MutableStateFlow<List<CookitNotification>>(emptyList())
-    val notifications: StateFlow<List<CookitNotification>> = _notifications.asStateFlow()
-
-    val userData: StateFlow<UserData?> = authState
-        .flatMapLatest { state ->
-            when (state) {
-                is AuthState.Authenticated -> userRepository.observeUserData(state.userId)
-                else -> flowOf(null)
-            }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
-
-    val isAdmin: StateFlow<Boolean> = combine(authState, userData) { auth, user ->
-        val email = (auth as? AuthState.Authenticated)?.email ?: user?.email
-        email == "edgargameplay2@gmail.com"
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = false
-    )
-
-    val favoriteRecipes: StateFlow<List<Recipe>> = combine(
-        publicRecipes,
-        userData
-    ) { publicList, user ->
-        val favoriteIds = user?.favorites ?: emptyList()
-        publicList.filter { it.id in favoriteIds }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    // 7. Flujos de UI
+    val favoriteRecipes: StateFlow<List<Recipe>> = combine(publicRecipes, userData) { list, user ->
+        val favIds = user?.favorites ?: emptyList()
+        list.filter { it.id in favIds }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val filteredPublicRecipes: StateFlow<List<Recipe>> = combine(
-        publicRecipes,
-        _exploreSearchQuery,
-        _filterExploreByInventory,
-        userData
-    ) { publicList, query, onlyInventory, user ->
+        publicRecipes, _exploreSearchQuery, _filterExploreByInventory, userData
+    ) { list, query, onlyInv, user ->
         val inventory = user?.inventory ?: emptyList()
-        publicList.filter { recipe ->
-            val matchesQuery = recipe.name.contains(query, ignoreCase = true)
-            val matchesInventory = if (onlyInventory) {
-                recipe.ingredients.any { ingredient -> 
-                    inventory.any { it.contains(ingredient, ignoreCase = true) } 
-                }
-            } else true
-            matchesQuery && matchesInventory
+        list.filter { r ->
+            val mQuery = r.name.contains(query, ignoreCase = true)
+            val mInv = if (onlyInv) r.ingredients.any { ing -> inventory.any { it.contains(ing, ignoreCase = true) } } else true
+            mQuery && mInv
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val recipes: StateFlow<List<Recipe>> = combine(
-        publicRecipes,
-        userData,
-        _searchQuery,
-        _filterByInventory
-    ) { publicList, user, query, onlyInventory ->
-        val myRecipeIds = user?.myRecipes ?: emptyList()
+        publicRecipes, userData, _searchQuery, _filterByInventory
+    ) { list, user, query, onlyInv ->
+        val myIds = user?.myRecipes ?: emptyList()
         val inventory = user?.inventory ?: emptyList()
-        publicList.filter { recipe ->
-            val matchesId = recipe.id in myRecipeIds
-            val matchesQuery = recipe.name.contains(query, ignoreCase = true)
-            val matchesInventory = if (onlyInventory) {
-                recipe.ingredients.any { ingredient -> 
-                    inventory.any { it.contains(ingredient, ignoreCase = true) } 
-                }
-            } else true
-            matchesId && matchesQuery && matchesInventory
+        list.filter { r ->
+            val mId = r.id in myIds
+            val mQuery = r.name.contains(query, ignoreCase = true)
+            val mInv = if (onlyInv) r.ingredients.any { ing -> inventory.any { it.contains(ing, ignoreCase = true) } } else true
+            mId && mQuery && mInv
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _generationState = MutableStateFlow<UiState<Recipe>>(UiState.Idle)
-    val generationState: StateFlow<UiState<Recipe>> = _generationState.asStateFlow()
-
-    private val _imageGenerationState = MutableStateFlow<UiState<String>>(UiState.Idle)
-    val imageGenerationState: StateFlow<UiState<String>> = _imageGenerationState.asStateFlow()
-
+    // 8. Estado de Adición de Receta
     private val _addRecipeState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val addRecipeState: StateFlow<UiState<Unit>> = _addRecipeState.asStateFlow()
 
-    private var imageGenerationJob: Job? = null
-
     init {
         observePublicRecipes()
-        observeTrashedRecipes()
     }
 
     private fun observePublicRecipes() {
@@ -173,21 +140,12 @@ class ChefViewModel @Inject constructor(
         }
     }
 
-    private fun observeTrashedRecipes() {
-        viewModelScope.launch {
-            firestoreRepository.observeTrashedRecipes().collect { recipes ->
-                _trashedRecipes.value = recipes
-            }
-        }
-    }
-
     fun signIn(email: String, password: String) {
         viewModelScope.launch {
             _authUiState.value = UiState.Loading("Logging in...")
-            val result = authRepository.signIn(email, password)
-            result.fold(
+            authRepository.signIn(email, password).fold(
                 onSuccess = { _authUiState.value = UiState.Success(Unit) },
-                onFailure = { error -> _authUiState.value = UiState.Error(error.message ?: "Unknown error") }
+                onFailure = { error -> _authUiState.value = UiState.Error(error.message ?: "Error") }
             )
         }
     }
@@ -195,37 +153,17 @@ class ChefViewModel @Inject constructor(
     fun signInWithGoogle(idToken: String) {
         viewModelScope.launch {
             _authUiState.value = UiState.Loading("Connecting with Google...")
-            val result = authRepository.signInWithGoogle(idToken)
-            result.fold(
-                onSuccess = { userId ->
-                    // Intentamos obtener el email real de la sesión de Firebase
-                    val email = authRepository.observeAuthState().first().let { 
-                        (it as? AuthState.Authenticated)?.email ?: "google_user@example.com"
-                    }
+            authRepository.signInWithGoogle(idToken).onSuccess { userId ->
+                viewModelScope.launch {
+                    val auth = authRepository.observeAuthState().first { it is AuthState.Authenticated }
+                    val realEmail = (auth as AuthState.Authenticated).email ?: "google_user@example.com"
                     val existingData = userRepository.getUserData(userId)
                     if (existingData == null) {
-                        val newUserData = UserData(email = email, name = "Google User")
-                        userRepository.createUserDocument(userId, newUserData)
+                        userRepository.createUserDocument(userId, UserData(email = realEmail, name = "Google User"))
                     }
                     _authUiState.value = UiState.Success(Unit)
-                },
-                onFailure = { error -> _authUiState.value = UiState.Error(error.message ?: "Google error") }
-            )
-        }
-    }
-
-    fun signUp(name: String, email: String, password: String) {
-        viewModelScope.launch {
-            _authUiState.value = UiState.Loading("Creating account...")
-            val authResult = authRepository.signUp(email, password)
-            authResult.fold(
-                onSuccess = { userId ->
-                    val newUserData = UserData(email = email, name = name)
-                    userRepository.createUserDocument(userId, newUserData)
-                    _authUiState.value = UiState.Success(Unit)
-                },
-                onFailure = { error -> _authUiState.value = UiState.Error(error.message ?: "Signup error") }
-            )
+                }
+            }.onFailure { _authUiState.value = UiState.Error(it.message ?: "Google Error") }
         }
     }
 
@@ -234,40 +172,27 @@ class ChefViewModel @Inject constructor(
         _authUiState.value = UiState.Idle
     }
 
-    fun clearAuthUiState() { _authUiState.value = UiState.Idle }
-    fun clearGenerationState() { _generationState.value = UiState.Idle }
-    fun clearImageState() { 
-        imageGenerationJob?.cancel()
-        _imageGenerationState.value = UiState.Idle 
-    }
-
     fun deleteRecipe(recipe: Recipe) {
         viewModelScope.launch { 
-            val result = firestoreRepository.moveToTrash(recipe)
-            result.fold(
-                onSuccess = { showNotification("Recipe moved to trash bin", Color(0xFF5D4037)) },
-                onFailure = { showNotification("Error: ${it.message}", Color.Red) }
-            )
+            firestoreRepository.moveToTrash(recipe).onSuccess { 
+                showNotification("Recipe moved to trash bin", Color(0xFF5D4037)) 
+            }.onFailure { showNotification("Error: ${it.message}", Color.Red) }
         }
     }
 
     fun restoreFromTrash(recipe: Recipe) {
         viewModelScope.launch { 
-            val result = firestoreRepository.restoreFromTrash(recipe)
-            result.fold(
-                onSuccess = { showNotification("Recipe restored", Color(0xFF388E3C)) },
-                onFailure = { showNotification("Error: ${it.message}", Color.Red) }
-            )
+            firestoreRepository.restoreFromTrash(recipe).onSuccess { 
+                showNotification("Recipe restored", Color(0xFF388E3C)) 
+            }.onFailure { showNotification("Error: ${it.message}", Color.Red) }
         }
     }
 
     fun permanentDelete(recipeId: String) {
         viewModelScope.launch { 
-            val result = firestoreRepository.permanentDelete(recipeId)
-            result.fold(
-                onSuccess = { showNotification("Recipe deleted permanently", Color.Black) },
-                onFailure = { showNotification("Error: ${it.message}", Color.Red) }
-            )
+            firestoreRepository.permanentDelete(recipeId).onSuccess { 
+                showNotification("Recipe deleted permanently", Color.Black) 
+            }.onFailure { showNotification("Error: ${it.message}", Color.Red) }
         }
     }
 
@@ -276,10 +201,8 @@ class ChefViewModel @Inject constructor(
         viewModelScope.launch { 
             val user = userRepository.getUserData(userId)
             val isFavorite = user?.favorites?.contains(recipeId) == true
-            val result = userRepository.toggleFavorite(userId, recipeId)
-            result.onSuccess {
-                val msg = if (isFavorite) "Removed from favorites" else "Added to favorites"
-                showNotification(msg, if (isFavorite) Color.Gray else Color(0xFFD32F2F))
+            userRepository.toggleFavorite(userId, recipeId).onSuccess {
+                showNotification(if (isFavorite) "Removed from favorites" else "Added to favorites", if (isFavorite) Color.Gray else Color(0xFFD32F2F))
             }
         }
     }
@@ -289,10 +212,8 @@ class ChefViewModel @Inject constructor(
         viewModelScope.launch { 
             val user = userRepository.getUserData(userId)
             val isSaved = user?.myRecipes?.contains(recipeId) == true
-            val result = userRepository.toggleSaveRecipe(userId, recipeId)
-            result.onSuccess {
-                val msg = if (isSaved) "Removed from saved" else "Recipe saved"
-                showNotification(msg, if (isSaved) Color.Gray else Color(0xFF388E3C))
+            userRepository.toggleSaveRecipe(userId, recipeId).onSuccess {
+                showNotification(if (isSaved) "Removed from saved" else "Recipe saved", if (isSaved) Color.Gray else Color(0xFF388E3C))
             }
         }
     }
@@ -302,19 +223,16 @@ class ChefViewModel @Inject constructor(
             val notification = CookitNotification(message = message, color = color)
             _notifications.update { it + notification }
             delay(2500)
-            _notifications.update { currentList -> currentList.filter { it.id != notification.id } }
+            _notifications.update { current -> current.filter { it.id != notification.id } }
         }
     }
 
     fun uploadProfilePicture(bitmap: Bitmap) {
         val userId = authRepository.currentUserId ?: return
         viewModelScope.launch {
-            val size = minOf(bitmap.width, bitmap.height)
-            val x = (bitmap.width - size) / 2
-            val y = (bitmap.height - size) / 2
-            val croppedBitmap = Bitmap.createBitmap(bitmap, x, y, size, size)
-            val result = storageRepository.uploadProfilePicture(userId, croppedBitmap)
-            result.onSuccess { url -> userRepository.updateProfilePicture(userId, url) }
+            storageRepository.uploadProfilePicture(userId, bitmap).onSuccess { url ->
+                userRepository.updateProfilePicture(userId, url)
+            }
         }
     }
 
@@ -322,6 +240,7 @@ class ChefViewModel @Inject constructor(
     fun onExploreSearchQueryChange(query: String) { _exploreSearchQuery.value = query }
     fun onToggleInventoryFilter() { _filterByInventory.value = !_filterByInventory.value }
     fun onToggleExploreInventoryFilter() { _filterExploreByInventory.value = !_filterExploreByInventory.value }
+    
     fun addIngredient(ingredient: String) {
         val userId = authRepository.currentUserId ?: return
         if (ingredient.isBlank()) return
@@ -332,54 +251,27 @@ class ChefViewModel @Inject constructor(
         viewModelScope.launch { userRepository.removeIngredient(userId, ingredient) }
     }
 
-    fun saveManualRecipe(
-        name: String,
-        ingredients: List<String>,
-        steps: List<String>,
-        difficulty: String,
-        imageBitmap: Bitmap?
-    ) {
+    fun saveManualRecipe(name: String, ingredients: List<String>, steps: List<String>, difficulty: String, imageBitmap: Bitmap?) {
         val userId = authRepository.currentUserId ?: return
         viewModelScope.launch {
-            _addRecipeState.value = UiState.Loading("Saving recipe...")
-            try {
-                val initialRecipe = Recipe(
-                    name = name,
-                    ingredients = ingredients,
-                    steps = steps,
-                    difficulty = difficulty
-                )
-                val saveResult = firestoreRepository.saveRecipe(initialRecipe)
-                saveResult.fold(
-                    onSuccess = { recipeId ->
-                        var finalImageUrl = ""
-                        if (imageBitmap != null) {
-                            val uploadResult = storageRepository.uploadRecipeImage(recipeId, imageBitmap)
-                            if (uploadResult.isSuccess) {
-                                finalImageUrl = uploadResult.getOrThrow()
-                                val updatedRecipe = initialRecipe.copy(id = recipeId, imageURL = finalImageUrl)
-                                firestoreRepository.saveRecipe(updatedRecipe)
-                            }
-                        } else {
-                             val updatedRecipe = initialRecipe.copy(id = recipeId)
-                             firestoreRepository.saveRecipe(updatedRecipe)
-                        }
-                        userRepository.addRecipeToMyRecipes(userId, recipeId)
-                        _addRecipeState.value = UiState.Success(Unit)
-                    },
-                    onFailure = { error ->
-                        _addRecipeState.value = UiState.Error(error.message ?: "Failed to save recipe")
+            _addRecipeState.value = UiState.Loading("Saving...")
+            firestoreRepository.saveRecipe(Recipe(name = name, ingredients = ingredients, steps = steps, difficulty = difficulty)).fold(
+                onSuccess = { id ->
+                    if (imageBitmap != null) {
+                        storageRepository.uploadRecipeImage(id, imageBitmap).onSuccess { firestoreRepository.updateRecipeImageUrl(id, it) }
                     }
-                )
-            } catch (e: Exception) {
-                _addRecipeState.value = UiState.Error(e.message ?: "Unknown error")
-            }
+                    userRepository.addRecipeToMyRecipes(userId, id)
+                    _addRecipeState.value = UiState.Success(Unit)
+                },
+                onFailure = { _addRecipeState.value = UiState.Error(it.message ?: "Failed") }
+            )
         }
     }
 
-    fun clearAddRecipeState() {
-        _addRecipeState.value = UiState.Idle
-    }
+    // IA y Estados de Imagen
+    private val _imageGenerationState = MutableStateFlow<UiState<String>>(UiState.Idle)
+    val imageGenerationState: StateFlow<UiState<String>> = _imageGenerationState.asStateFlow()
+    private var imageGenerationJob: Job? = null
 
     fun generateRecipeImage(recipeId: String, existingImageUrl: String, recipeTitle: String, ingredients: List<String>) {
         imageGenerationJob?.cancel()
@@ -388,14 +280,18 @@ class ChefViewModel @Inject constructor(
                 _imageGenerationState.value = UiState.Success(existingImageUrl)
                 return@launch
             }
-            _imageGenerationState.value = UiState.Loading("Generating image...")
+            _imageGenerationState.value = UiState.Loading("Generating...")
             try {
                 val bitmap = aiLogicDataSource.generateRecipeImage(recipeTitle, ingredients)
-                val uploadResult = storageRepository.uploadRecipeImage(recipeId, bitmap)
-                uploadResult.onSuccess { _imageGenerationState.value = UiState.Success(it) }
-            } catch (e: Exception) {
-                _imageGenerationState.value = UiState.Error("Error: ${e.message}")
-            }
+                storageRepository.uploadRecipeImage(recipeId, bitmap).onSuccess {
+                    firestoreRepository.updateRecipeImageUrl(recipeId, it)
+                    _imageGenerationState.value = UiState.Success(it)
+                }
+            } catch (e: Exception) { _imageGenerationState.value = UiState.Error(e.message ?: "Error") }
         }
     }
+
+    fun clearAddRecipeState() { _addRecipeState.value = UiState.Idle }
+    fun clearAuthUiState() { _authUiState.value = UiState.Idle }
+    fun signUp(name: String, email: String, password: String) {}
 }
