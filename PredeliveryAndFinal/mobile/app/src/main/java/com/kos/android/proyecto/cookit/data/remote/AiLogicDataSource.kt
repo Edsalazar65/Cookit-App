@@ -50,7 +50,7 @@ class AiLogicDataSource @javax.inject.Inject constructor() : IAiLogicDataSource 
      */
     private val generativeModel = Firebase.ai(
         backend = GenerativeBackend.vertexAI()
-    ).generativeModel("gemini-1.5-flash")
+    ).generativeModel("gemini-2.5-flash")
 
     /**
      * Modelo para generación de imágenes
