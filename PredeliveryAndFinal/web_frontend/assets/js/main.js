@@ -1,7 +1,9 @@
 import { auth, db, storage } from "./firebase-init.js";
 import { ADMIN_EMAIL } from "./constants.js";
 export { ADMIN_EMAIL } from "./constants.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { vertexAI } from "./firebase-init.js"; 
+import { getGenerativeModel } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-vertexai-preview.js";
 import {
   arrayRemove,
   collection,
@@ -12,9 +14,9 @@ import {
   arrayUnion,
   addDoc,
   writeBatch,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 function escapeHtml(text) {
   if (text == null) return "";
@@ -124,7 +126,7 @@ async function syncUserInventoryFromFirebase() {
 function persistMyRecipesCache(uid) {
   try {
     sessionStorage.setItem(`myRecipes_cache_v2_${uid}`, JSON.stringify(recipeListCache));
-  } catch (_) {}
+  } catch (_) { }
 }
 
 function loadMyRecipesCacheFromSession(uid) {
@@ -166,7 +168,30 @@ $(document).ready(function () {
   };
 
   $(document).on("input", "#recipeSearch", applyRecipeFilters);
-  $(document).on("change", "#filter-by-inventory", applyRecipeFilters);
+  $(document).on("change", "#filter-by-inventory", function () {
+    const $label = $(this).closest('label');
+
+    if (this.checked) {
+
+      $label.css({
+        "background-color": "#ed7d31",
+        "color": "white",
+
+        "border-radius": "15px",
+        "transition": "all 0.3s ease"
+      });
+    } else {
+
+      $label.css({
+        "background-color": "transparent",
+        "color": "inherit",
+
+        "border-radius": "0"
+      });
+    }
+
+    applyRecipeFilters();
+  });
 
   onAuthStateChanged(auth, (user) => {
     const path = window.location.pathname;
@@ -248,30 +273,38 @@ $(document).ready(function () {
       }
 
       const enrichedPrompt = `
-        You are Remy, an expert chef. The user says: "${message}".
+        Eres Remy, un chef experto. El usuario dice: "${message}".
 
-        User pantry / inventory: [${userInventory.join(", ")}].
+        Alacena / inventario del usuario: [${userInventory.join(", ")}].
 
-        If the user asks you to create or invent a recipe, respond ONLY with a JSON object (no extra text, no markdown fences). The JSON MUST follow this exact shape (example recipe):
+        Si el usuario te pide crear o inventar una receta, responde solo con un objeto JSON (sin texto extra, sin marcas de markdown). El JSON DEBE seguir esta forma exacta (receta de ejemplo):
         {
-            "name": "Pork baos",
-            "ingredients": ["Bao buns", "Mayonnaise", "Cucumber", "Carrot", "Red onion", "Ground pork", "Peanuts", "Soy sauce", "Sriracha"],
-            "steps": ["Prep vegetables.", "Pickle cucumber, carrot, onion with vinegar and salt.", "Mix mayo and sriracha; crush peanuts.", "Cook pork with soy until glazed.", "Steam bao buns.", "Fill buns with pork, veg, sauces and peanuts."],
-            "difficulty": "Low",
-            "imagePrompt": "A detailed photorealistic prompt to generate an image of this dish, e.g. close-up of steamed bao buns with glazed pork and pickles, cinematic lighting."
+            "name": "Baos de cerdo",
+            "ingredients": ["Pan bao", "Mayonesa", "Pepino", "Zanahoria", "Cebolla", "Carne molida", "Cacahuetes", "Salsa de soya", "Sriracha"],
+            "steps": ["Preparar los ingredientes.", "Encurtir el pepino, zanahoria, cebolla con vinagre y sal.", "Mezclar; triturar cacahuetes.", "Cocinar cerdo con salsa de soya hasta que esté glaseado.", "Hervir los panes de bao.", "Rellenar los panes con cerdo, vegetales, salsas y cacahuetes."],
+            "difficulty": "Baja",
+            "imagePrompt": "Un prompt detallado para generar una imagen realista de este plato, p. ej. acercamiento de panes de bao hervidos con cerdo glaseado y pepinos, iluminación cinematográfica."
         }
 
-        You may use pantry items or omit some as needed for the recipe.
-        Difficulty must be one of: High, Medium, Low.
+        Puedes usar ingredientes del inventario del usuario, pero no es obligatorio. Si usas ingredientes fuera del inventario, asegúrate de que la receta siga siendo fácil de hacer.
+        La dificultad debe ser una de: Alta, Media, Baja.
 
-        If the user asks a normal question (not to create a recipe), reply as a friendly chef in plain text.
+        Si el usuario hace una pregunta normal (no para crear una receta), responde como un chef amigable en texto plano.
         `;
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: enrichedPrompt, userId: currentUserId }),
+      
+      const model = getGenerativeModel(vertexAI, {
+        model: "gemini-2.5-flash",
+        systemInstruction: "Eres Remy, un chef experto y apasionado. Dices palabras en francés como 'Oui', 'Mon ami' o 'Magnifique', pero no muy seguido. Siempre usas analogías culinarias. Se breve con tus respuestas."
       });
+
+      
+      const finalPrompt = `[Contexto: El usuario tiene estos ingredientes: ${userInventory.join(", ")}.] ${enrichedPrompt}`;
+
+      
+      const result = await model.generateContent(finalPrompt);
+      let botReply = result.response.text();
+
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -281,7 +314,7 @@ $(document).ready(function () {
       const data = await response.json();
       $loading.remove();
 
-      let botReply = data.text;
+
 
       try {
         const start = botReply.indexOf("{");
@@ -523,9 +556,9 @@ function getRecipeCardHTML(recipeId, recipe, isFav, isSaved, options = {}) {
                 <h3>Ingredients</h3>
                 <ul>
                     ${(recipe.ingredients || [])
-                      .slice(0, 5)
-                      .map((ing) => `<li>${ing}</li>`)
-                      .join("")}
+      .slice(0, 5)
+      .map((ing) => `<li>${ing}</li>`)
+      .join("")}
                 </ul>
                 <div class="card-actions" style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
                     <button class="toggle-fav-btn action-btn ${isFav ? "active" : ""}" 
