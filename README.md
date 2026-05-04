@@ -13,6 +13,8 @@ Repository for the Android Cookit app.
 ## Functional Integration y Progress report
 **Link del video:** https://youtu.be/eR19b0QyV54
 
-
 ## Pre-delivery
 **Link del video:** https://youtu.be/_mqz_UPdye0
+
+## Pre-delivery
+**Link del video:** https://youtu.be/MHDMGjnUiA0
