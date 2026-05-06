@@ -5,12 +5,12 @@ import {
   signInWithRedirect,
   GoogleAuthProvider,
   signOut,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
   doc,
   getDoc,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const loginForm = document.getElementById("login-form");
 const googleBtn = document.getElementById("google-login-btn");
@@ -48,5 +48,6 @@ googleBtn.addEventListener("click", async () => {
     window.location.href = "index.html";
   } catch (error) {
     console.error("Error Google Login:", error.code, error);
+    alert(`Google login failed: ${error.code || "unknown"} - ${error.message || "No details"}`);
   }
 });

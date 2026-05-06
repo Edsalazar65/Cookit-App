@@ -1,11 +1,8 @@
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { auth, db, storage } from "./firebase-init.js";
 import { ADMIN_EMAIL } from "./constants.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-import { getFirestore, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const nameDisplay = document.getElementById("profile-username");
 const logOutBtn = document.getElementById("logout-btn");
@@ -109,7 +106,7 @@ onAuthStateChanged(auth, async (user) => {
             const userData = userDoc.data();
 
             let rawName = userData.name || user.email.split("@")[0];
-            
+
             const firstName = rawName.trim().split(" ")[0];
             nameDisplay.textContent = `Chef ${firstName}`;
 

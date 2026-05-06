@@ -1,13 +1,13 @@
 import { auth, db, storage } from "./firebase-init.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   addDoc,
   arrayUnion,
   collection,
   doc,
   updateDoc,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getDownloadURL, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getDownloadURL, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const form = document.getElementById("add-recipe-form");
 const statusEl = document.getElementById("ar-status");

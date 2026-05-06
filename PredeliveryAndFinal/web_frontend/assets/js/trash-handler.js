@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase-init.js";
 import { ADMIN_EMAIL } from "./constants.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   collection,
   deleteDoc,
@@ -8,7 +8,7 @@ import {
   getDoc,
   onSnapshot,
   writeBatch,
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const trashList = document.getElementById("trash-list");
 const emptyMsg = document.getElementById("trash-empty");
